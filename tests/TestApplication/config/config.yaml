@@ -1,0 +1,42 @@
+imports:
+    - { resource: "packages/*.yaml" }
+    - { resource: "services_test.php" }
+    # A developer's own providers, not versioned (see local.yaml.dist).
+    - { resource: "local.yaml", ignore_errors: not_found }
+
+# The AI translation bundle ships no migrations: the test application versions its
+# tables like any host would (kernel.project_dir is vendor/sylius/test-application).
+doctrine_migrations:
+    migrations_paths:
+        'Tests\CylleneDigital\SyliusAiTranslationPlugin\Migrations': '%kernel.project_dir%/../../../tests/TestApplication/src/Migrations'
+
+# The test application's own templates (the shop line the Behat scenarios read).
+twig:
+    paths:
+        '%kernel.project_dir%/../../../tests/TestApplication/templates': ~
+
+framework:
+    # The "host project" translations are real ones: the shop renders them, as a host's would.
+    translator:
+        paths:
+            - '%kernel.project_dir%/../../../tests/TestApplication/translations'
+    # For local setups behind a reverse proxy (Symfony CLI, a Docker reverse proxy, ...):
+    # `private_ranges` covers loopback and the Docker networks without trusting any direct
+    # client. NB: do NOT set a TRUSTED_PROXIES env var: the test-application's public/index.php
+    # has legacy code using the removed Request::HEADER_X_FORWARDED_ALL constant that fatals as
+    # soon as it is defined.
+    trusted_proxies: 'private_ranges'
+    trusted_headers: ['x-forwarded-for', 'x-forwarded-host', 'x-forwarded-proto', 'x-forwarded-port', 'x-forwarded-prefix']
+
+sylius_twig_hooks:
+    hooks:
+        # A translated line of the host catalogue on the shop homepage: see templates/shop/welcome.html.twig.
+        'sylius_shop.homepage.index':
+            ai_translation_welcome:
+                template: 'shop/welcome.html.twig'
+                priority: 1000
+        # The admin "notifications" widget calls https://gus.sylius.com/version on every page,
+        # which a test environment has no use for (and may not reach).
+        'sylius_admin.common.component.navbar.items':
+            notifications:
+                enabled: false

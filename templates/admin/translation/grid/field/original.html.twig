@@ -1,0 +1,8 @@
+{% import '@CylleneDigitalSyliusAiTranslationPlugin/admin/translation/grid/_edit_trigger.html.twig' as edit %}
+<a class="d-block text-reset text-decoration-none" {{ edit.attributes(data, true) }}>
+    {% if data.original is not null and data.original is not same as('') %}
+        <span class="text-truncate d-inline-block cyllene-translation-cell-truncate {{ data.hasOverride ? 'text-secondary' }}">{{ data.original }}</span>
+    {% else %}
+        <span class="text-secondary">—</span>
+    {% endif %}
+</a>

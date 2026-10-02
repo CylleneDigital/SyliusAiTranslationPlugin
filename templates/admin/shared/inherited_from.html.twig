@@ -1,0 +1,20 @@
+{#
+    Where an inherited value comes from — the engine's `inheritedFrom` (locale and scope of
+    the override the entry falls back to). Through the language chain a regional locale
+    inherits from its parent language ("fr_FR" from "fr"), not only from the global
+    override of a channel view: "inherited from global" alone would be wrong half the time.
+
+    from:  {locale, scope} — the override inherited
+    locale, scope: the entry's own coordinates
+#}
+{% macro label(from, locale, scope) %}
+    {%- if from.locale == locale -%}
+        {{ 'cyllene_digital_sylius_ai_translation.ui.inherited_from_global'|trans }}
+    {%- elseif from.scope != '' -%}
+        {{ 'cyllene_digital_sylius_ai_translation.ui.inherited_from_locale_channel'|trans({'locale': from.locale, 'channel': from.scope}) }}
+    {%- elseif scope != '' -%}
+        {{ 'cyllene_digital_sylius_ai_translation.ui.inherited_from_locale_global'|trans({'locale': from.locale}) }}
+    {%- else -%}
+        {{ 'cyllene_digital_sylius_ai_translation.ui.inherited_from_locale'|trans({'locale': from.locale}) }}
+    {%- endif -%}
+{% endmacro %}

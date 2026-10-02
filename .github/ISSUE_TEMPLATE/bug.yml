@@ -1,0 +1,78 @@
+name: Report a bug
+description: Unexpected behaviour of the plugin
+labels: ["bug"]
+body:
+    - type: markdown
+      attributes:
+          value: |
+              ⚠️ **A security flaw is not reported here.** See [SECURITY.md](https://github.com/CylleneDigital/SyliusAiTranslationPlugin/blob/main/SECURITY.md).
+
+              **Never include** an API key, a customer name or a database dump in a public issue.
+    - type: input
+      id: plugin-version
+      attributes:
+          label: Plugin version
+      validations:
+          required: true
+    - type: input
+      id: bundle-version
+      attributes:
+          label: cyllene-digital/ai-translation-bundle version
+      validations:
+          required: true
+    - type: input
+      id: sylius-version
+      attributes:
+          label: Sylius version
+      validations:
+          required: true
+    - type: input
+      id: php-version
+      attributes:
+          label: PHP version
+      validations:
+          required: true
+    - type: dropdown
+      id: area
+      attributes:
+          label: Area
+          options:
+              - Translation management screen (browsing, coverage, edition)
+              - Import / export
+              - AI suggestions (generation, cost estimate, review)
+              - Channel scopes and the channel form section
+              - Admin menu / permissions
+              - Installation / configuration
+              - I do not know
+      validations:
+          required: true
+    - type: input
+      id: provider
+      attributes:
+          label: AI provider
+          description: "Only for a generation issue - e.g. `anthropic`, `openai`, `deepl`, `default`."
+    - type: textarea
+      id: expected
+      attributes:
+          label: Expected behaviour
+      validations:
+          required: true
+    - type: textarea
+      id: actual
+      attributes:
+          label: Observed behaviour
+          description: "A screenshot helps a lot."
+      validations:
+          required: true
+    - type: textarea
+      id: steps
+      attributes:
+          label: Steps to reproduce
+      validations:
+          required: true
+    - type: textarea
+      id: logs
+      attributes:
+          label: Relevant logs
+          description: "Redact every sensitive value before pasting."
+          render: text

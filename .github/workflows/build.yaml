@@ -1,0 +1,305 @@
+name: Build
+
+on:
+    # No `paths-ignore` on `pull_request`: `Build complete` is a required check, and a required
+    # check that never starts blocks the pull request for good.
+    #
+    # `push` is limited to `main` so that a branch does not run the matrix twice, once for the push
+    # and once for its pull request.
+    push:
+        branches:
+            - main
+    pull_request: ~
+    release:
+        types: [created]
+    schedule:
+        -
+            cron: "0 1 * * 6"
+    workflow_dispatch: ~
+
+concurrency:
+    group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
+
+permissions:
+    contents: read
+
+jobs:
+    tests:
+        # Pinned rather than `ubuntu-latest`: the build action is only known to work on this image.
+        runs-on: ubuntu-24.04
+        # A stuck browser would otherwise hold the runner for the 6-hour default.
+        timeout-minutes: 30
+
+        name: "Sylius ${{ matrix.sylius }}, PHP ${{ matrix.php }}, Symfony ${{ matrix.symfony }}, ${{ matrix.database }}"
+
+        strategy:
+            fail-fast: false
+            matrix:
+                # PHP 8.5: should it break on a third-party dependency rather than on our code,
+                # move the line to `continue-on-error` with a comment - do not drop it from the matrix.
+                php: ["8.3", "8.4", "8.5"]
+                sylius: ["~2.1.0", "~2.2.0", "~2.3.0"]
+                database: ["mysql:8.4"]
+                # Symfony is restricted per Sylius line. Sylius 2.1 and 2.2 cap framework-bundle at
+                # 7.4 and doctrine-bundle at 2.x, but not the standalone components: with `^8.0`
+                # allowed, PHP 8.4+ pulls symfony/var-exporter 8, which has no LazyGhost left,
+                # and doctrine-bundle 2.x (native lazy objects off) then fails on boot.
+                # Sylius 2.3 resolves doctrine-bundle 3 (native lazy objects forced), so it
+                # keeps Symfony 8 - reached by the PHP 8.4 and 8.5 jobs, 8.3 being below its floor.
+                include:
+                    -
+                        sylius: "~2.1.0"
+                        symfony: "^7.4"
+                    -
+                        sylius: "~2.2.0"
+                        symfony: "^7.4"
+                    -
+                        sylius: "~2.3.0"
+                        symfony: "^7.4 || ^8.0"
+                    # Extra databases on the primary combination. The build action declares MariaDB
+                    # with a bare version, which DBAL reads as MySQL: that is what the Sylius 2.3
+                    # migrations need, they skip a database declared as MariaDB.
+                    -
+                        php: "8.4"
+                        sylius: "~2.3.0"
+                        symfony: "^7.4"
+                        database: "mysql:8.0"
+                    -
+                        php: "8.4"
+                        sylius: "~2.3.0"
+                        symfony: "^7.4"
+                        database: "mariadb:10.11"
+                    -
+                        php: "8.4"
+                        sylius: "~2.3.0"
+                        symfony: "^7.4"
+                        database: "mariadb:11.4"
+                    # The test application's migrations of the engine tables are written for MySQL
+                    # and MariaDB (the engine ships a mapping, no migration): on PostgreSQL the
+                    # whole schema is created from the mapping instead.
+                    -
+                        php: "8.4"
+                        sylius: "~2.3.0"
+                        symfony: "^7.4"
+                        database: "postgres:15"
+                        database_setup: "schema"
+                    -
+                        php: "8.4"
+                        sylius: "~2.3.0"
+                        symfony: "^7.4"
+                        database: "postgres:16"
+                        database_setup: "schema"
+                    -
+                        php: "8.4"
+                        sylius: "~2.3.0"
+                        symfony: "^7.4"
+                        database: "postgres:17"
+                        database_setup: "schema"
+                    # Matches the primary combination: only that job measures code coverage.
+                    -
+                        php: "8.4"
+                        sylius: "~2.3.0"
+                        database: "mysql:8.4"
+                        coverage: "pcov"
+
+        env:
+            APP_ENV: test
+
+        steps:
+            -
+                uses: actions/checkout@v7
+
+            # Sylius 2.1 / 2.2 declare their Behat steps in annotations, which Behat 4 no longer reads;
+            # Composer would still pick Behat 4 for them.
+            -
+                name: Keep Behat 3 before Sylius 2.3
+                if: matrix.sylius != '~2.3.0'
+                run: composer require --dev --no-update --no-interaction "behat/behat:^3.22" "friends-of-behat/mink-extension:^2.7"
+
+            # Sylius 2.1 mappings fail ORM 3.7 validation (ShipmentUnit#shipment vs Shipment#units).
+            -
+                name: Keep Doctrine ORM below 3.7 before Sylius 2.3
+                if: matrix.sylius != '~2.3.0'
+                run: composer require --no-update --no-interaction "doctrine/orm:^2.20 || >=3.6 <3.7"
+
+            -
+                name: Build Sylius Test Application
+                uses: SyliusLabs/BuildTestAppAction@fbdfc158a99f540fc3bbe554b46120d14444f2f4 # v4.3.0
+                with:
+                    # The admin pages the tests render include the Webpack Encore entries:
+                    # without a front-end build they answer 500 without saying why.
+                    e2e_js: "yes"
+                    cache_key: "${{ runner.os }}-php-${{ matrix.php }}-composer-${{ hashFiles('**/composer.json') }}"
+                    cache_restore_key: "${{ runner.os }}-php-${{ matrix.php }}-composer-"
+                    database: "${{ matrix.database }}"
+                    database_setup: "${{ matrix.database_setup || 'migrations' }}"
+                    node_version: "22.x"
+                    php_version: "${{ matrix.php }}"
+                    php_coverage: "${{ matrix.coverage || 'none' }}"
+                    sylius_version: "${{ matrix.sylius }}"
+                    symfony_version: "${{ matrix.symfony }}"
+                    # The tests create their own schema and data.
+                    load_fixtures: "no"
+                    # The PHP-FPM worker behind `symfony server:start` can segfault at random under
+                    # OPcache (Behat then gets a 502): Behat does not need it.
+                    opcache_enable: "no"
+
+            -
+                name: Validate composer.json
+                run: composer validate --ansi --strict
+
+            # Catches wiring errors before the tests that depend on them: on a plugin, that is
+            # the most frequent class of bug.
+            -
+                name: Validate container
+                run: vendor/bin/console lint:container --env=test
+
+            # The engine's mapping is what the screens read: it has to stay valid on every line.
+            -
+                name: Validate Doctrine schema
+                run: vendor/bin/console doctrine:schema:validate --skip-sync
+
+            # Static analysis, coding standard and linting do not depend on the database nor on the
+            # PHP or Sylius line under test, so they only run once, on the primary job.
+            -
+                name: Run PHPStan
+                if: matrix.php == '8.4' && matrix.sylius == '~2.3.0' && matrix.database == 'mysql:8.4'
+                run: vendor/bin/phpstan analyse --ansi --no-progress --memory-limit=1G
+
+            -
+                name: Run ECS
+                if: matrix.php == '8.4' && matrix.sylius == '~2.3.0' && matrix.database == 'mysql:8.4'
+                run: vendor/bin/ecs check --ansi --no-progress-bar
+
+            -
+                name: Lint templates and translations
+                if: matrix.php == '8.4' && matrix.sylius == '~2.3.0' && matrix.database == 'mysql:8.4'
+                run: |
+                    vendor/bin/console lint:twig templates --env=test
+                    vendor/bin/console lint:yaml translations --env=test
+
+            -
+                name: Run unit tests
+                run: vendor/bin/phpunit --colors=always --testsuite=unit
+
+            -
+                name: Run integration and functional tests
+                run: vendor/bin/phpunit --colors=always --testsuite=non-unit
+
+            -
+                name: Measure code coverage
+                if: matrix.coverage
+                run: |
+                    mkdir -p var/coverage
+                    vendor/bin/phpunit --colors=never --coverage-clover=var/coverage/clover.xml --coverage-text=var/coverage/coverage.txt
+                    { echo '### Code coverage (unit, integration and functional)'; echo '```'; sed -n '/Summary:/,/^$/p' var/coverage/coverage.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+                    cat var/coverage/coverage.txt
+
+            -
+                name: Upload code coverage
+                if: matrix.coverage
+                uses: actions/upload-artifact@v7
+                with:
+                    name: coverage
+                    path: var/coverage
+
+            -
+                name: Run Behat
+                run: vendor/bin/behat --colors --strict --no-interaction -f progress --tags='~@javascript'
+
+            # The browser scenarios drive the Stimulus controllers in the Chrome the build action
+            # started: once, on the primary combination - they test the plugin's JavaScript, which
+            # does not change with the PHP or Sylius line, nor with the database.
+            -
+                name: Run Behat in a browser
+                if: matrix.php == '8.4' && matrix.sylius == '~2.3.0' && matrix.database == 'mysql:8.4'
+                run: vendor/bin/behat --colors --strict --no-interaction -f progress --tags='@javascript'
+
+            # A 502 "unexpected EOF" in Behat means the PHP backend of the Symfony server died: its
+            # stderr only lands in these logs.
+            -
+                name: Show Symfony server logs
+                if: failure()
+                timeout-minutes: 1
+                run: find "$HOME" -maxdepth 6 -type f -path '*symfony*/log/*' -exec tail -n 200 {} +
+
+            -
+                name: Upload Behat failure artifacts
+                uses: actions/upload-artifact@v7
+                if: failure()
+                with:
+                    # `job-index` keeps the name unique across the matrix.
+                    name: "behat-logs-sylius${{ matrix.sylius }}-symfony${{ matrix.symfony }}-php${{ matrix.php }}-job${{ strategy.job-index }}"
+                    path: etc/build
+                    if-no-files-found: ignore
+                    compression-level: 6
+                    overwrite: true
+
+    # `^1.0` claims every engine release since 1.0.0: the matrix above resolves the newest one,
+    # this job the oldest the constraint allows, on the primary combination.
+    engine-lowest:
+        runs-on: ubuntu-24.04
+        timeout-minutes: 30
+
+        name: "Oldest supported engine"
+
+        env:
+            APP_ENV: test
+
+        steps:
+            -
+                uses: actions/checkout@v7
+
+            -
+                name: Build Sylius Test Application
+                uses: SyliusLabs/BuildTestAppAction@fbdfc158a99f540fc3bbe554b46120d14444f2f4 # v4.3.0
+                with:
+                    e2e_js: "yes"
+                    cache_key: "${{ runner.os }}-php-8.4-composer-${{ hashFiles('**/composer.json') }}"
+                    cache_restore_key: "${{ runner.os }}-php-8.4-composer-"
+                    database: "mysql:8.4"
+                    node_version: "22.x"
+                    php_version: "8.4"
+                    sylius_version: "~2.3.0"
+                    symfony_version: "^7.4"
+                    load_fixtures: "no"
+
+            # The container was compiled against the newest engine: drop it with the downgrade.
+            -
+                name: Downgrade the engine to the oldest supported release
+                run: |
+                    composer update cyllene-digital/ai-translation-bundle --prefer-lowest --no-interaction --no-progress
+                    composer show cyllene-digital/ai-translation-bundle | grep -E "^(versions|source)"
+                    rm -rf var/cache
+
+            -
+                name: Validate container
+                run: vendor/bin/console lint:container --env=test
+
+            -
+                name: Run PHPStan
+                run: vendor/bin/phpstan analyse --ansi --no-progress --memory-limit=1G
+
+            -
+                name: Run tests
+                run: vendor/bin/phpunit --colors=always
+
+    # The matrix jobs carry generated names, which change with the matrix itself. This one has a
+    # fixed name and is the only check the branch rule has to require.
+    #
+    # `always()` matters: without it the job is skipped when a matrix job fails, and a skipped
+    # required check counts as satisfied - the rule would let through exactly what it guards
+    # against.
+    build:
+        runs-on: ubuntu-24.04
+        name: "Build complete"
+        needs: [tests, engine-lowest]
+        if: always()
+
+        steps:
+            -
+                name: Fail unless every job succeeded
+                run: |
+                    [ "${{ needs.tests.result }}" = "success" ] || exit 1
+                    [ "${{ needs.engine-lowest.result }}" = "success" ] || exit 1

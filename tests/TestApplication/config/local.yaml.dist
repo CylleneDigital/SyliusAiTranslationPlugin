@@ -1,0 +1,14 @@
+# Copy to local.yaml (not versioned) to give the dev site a provider of your own: a private
+# gateway, a paid account. Its key goes to tests/TestApplication/.env.dev.local, never here.
+# Then clear the cache: a file that did not exist is not picked up by itself.
+#
+# `when@dev` keeps it out of the test environment, whose suite must not depend on it.
+when@dev:
+    cyllene_digital_ai_translation:
+        default_provider: my_gateway
+        providers:
+            my_gateway:
+                type: default
+                api_key: '%env(MY_GATEWAY_API_KEY)%'
+                model: some-model
+                base_uri: 'https://gateway.example.com/v1'

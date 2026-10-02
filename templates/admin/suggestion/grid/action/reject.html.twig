@@ -1,0 +1,9 @@
+{#
+    Sylius' delete action, with its confirmation modal — rendered by the plugin because the
+    grid bundle's renderer hands a bare GridView no `options` (the stock template reads
+    the route from there). The modal posts `_method=DELETE` with a csrf token named after
+    the row id; the reject route honours it.
+#}
+{% set path = path('cyllene_digital_sylius_ai_translation_admin_suggestion_reject', {id: data.id}) %}
+
+{{ component('sylius_admin:delete_modal', {id: data.id, path: path, label: action.label, icon: action.icon|default('tabler:trash-x')}) }}

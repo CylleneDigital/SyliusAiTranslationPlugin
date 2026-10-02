@@ -1,0 +1,7 @@
+# Dev site: every admin holds all the plugin's permissions (opt-in documented in
+# docs/integration/permissions.md) - without a role, the plugin's screens return 403. Not in the test
+# environment: the suite gives each of its admins the roles under test.
+when@dev:
+    security:
+        role_hierarchy:
+            ROLE_ADMINISTRATION_ACCESS: [ROLE_AI_TRANSLATION_MANAGE]

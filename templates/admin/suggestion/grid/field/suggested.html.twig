@@ -1,0 +1,42 @@
+{% import '@CylleneDigitalSyliusAiTranslationPlugin/admin/suggestion/grid/_review_trigger.html.twig' as review %}
+{# The checks as the approval runs them now, not as the generation stored them once. #}
+{% set checks = cyllene_digital_sylius_ai_translation_review(data) %}
+{% set mismatch = review.placeholders(checks.placeholders) %}
+{% set plural = review.pluralGaps(checks.pluralGaps) %}
+<a class="d-block text-reset text-decoration-none" {{ review.attributes(data, true) }}>
+    <div class="text-truncate cyllene-translation-cell-truncate">{{ data.suggestedValue }}</div>
+    {% if data.generationError %}
+        {# The provider failure that produced this valueless row — full message on hover and in the modal. #}
+        <span class="badge bg-danger text-white" title="{{ data.generationError }}">
+            {{ ux_icon('tabler:alert-circle') }}
+            {{ 'cyllene_digital_sylius_ai_translation.ui.generation_failed'|trans }}
+        </span>
+    {% endif %}
+    {% if checks.sameAsCurrent %}
+        {# An "every key" run proposing the value already shown: approving writes no override. #}
+        <span class="badge bg-secondary-lt" title="{{ 'cyllene_digital_sylius_ai_translation.ui.suggestion_same_as_current'|trans }}">
+            {{ ux_icon('tabler:info-circle') }}
+            {{ 'cyllene_digital_sylius_ai_translation.ui.same_as_current'|trans }}
+        </span>
+    {% endif %}
+    {% if mismatch is not empty %}
+        <span class="badge bg-warning text-white" title="{{ 'cyllene_digital_sylius_ai_translation.ui.placeholder_mismatch'|trans }}: {{ mismatch }}">
+            {{ ux_icon('tabler:alert-triangle') }}
+            {{ 'cyllene_digital_sylius_ai_translation.ui.placeholder_mismatch'|trans }}
+        </span>
+    {% endif %}
+    {% if checks.syntax|length > 0 %}
+        {# The value's syntax does not match the catalogue's declared format — details on hover and in the modal. #}
+        <span class="badge bg-orange text-white" title="{{ checks.syntax|map(c => ('cyllene_digital_sylius_ai_translation.ui.' ~ c)|trans)|join(' · ') }}">
+            {{ ux_icon('tabler:alert-triangle') }}
+            {{ 'cyllene_digital_sylius_ai_translation.ui.syntax_warning'|trans }}
+        </span>
+    {% endif %}
+    {% if plural is not empty %}
+        {# Valid ICU, but the numbers of a missing category fall back to "other" ("2th"). #}
+        <span class="badge bg-warning text-white" title="{{ 'cyllene_digital_sylius_ai_translation.ui.plural_gaps_warning'|trans }} {{ plural }}">
+            {{ ux_icon('tabler:alert-triangle') }}
+            {{ 'cyllene_digital_sylius_ai_translation.ui.plural_gaps'|trans }}
+        </span>
+    {% endif %}
+</a>

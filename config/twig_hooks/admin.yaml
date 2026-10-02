@@ -1,0 +1,86 @@
+# Both admin screens are Sylius index pages: what a hook does not list here falls back to
+# `sylius_admin.common.index`, so the grid block (filters, data table, pagination) is Sylius'
+# own - only the headers, the blocks around the grids, the empty states and the modals are the
+# plugin's. Prepended by the DI extension: a host's own configuration wins.
+sylius_twig_hooks:
+    hooks:
+        # Catalogue screen. 'grid' (priority 100) is Sylius' own data grid block.
+        'cyllene_digital_sylius_ai_translation.admin.translation.index.content':
+            header:
+                template: '@CylleneDigitalSyliusAiTranslationPlugin/admin/translation/header.html.twig'
+                priority: 200
+            scope:
+                template: '@CylleneDigitalSyliusAiTranslationPlugin/admin/translation/content/scope.html.twig'
+                priority: 180
+            dashboard:
+                template: '@CylleneDigitalSyliusAiTranslationPlugin/admin/translation/content/dashboard.html.twig'
+                priority: 150
+            edit_modal:
+                template: '@CylleneDigitalSyliusAiTranslationPlugin/admin/translation/content/edit_modal.html.twig'
+                priority: 50
+
+        'cyllene_digital_sylius_ai_translation.admin.translation.index.content.header':
+            breadcrumbs:
+                template: '@CylleneDigitalSyliusAiTranslationPlugin/admin/translation/header/breadcrumbs.html.twig'
+                priority: 100
+            title_block:
+                template: '@CylleneDigitalSyliusAiTranslationPlugin/admin/translation/header/title_block.html.twig'
+                priority: 0
+
+        'cyllene_digital_sylius_ai_translation.admin.translation.index.content.grid':
+            no_data_block:
+                template: '@CylleneDigitalSyliusAiTranslationPlugin/admin/translation/grid/no_results.html.twig'
+                priority: 0
+
+        # Suggestions screen. 'grid' (priority 100) is Sylius' own data grid block.
+        'cyllene_digital_sylius_ai_translation.admin.suggestion.index.content':
+            header:
+                template: '@CylleneDigitalSyliusAiTranslationPlugin/admin/suggestion/header.html.twig'
+                priority: 200
+            scope:
+                template: '@CylleneDigitalSyliusAiTranslationPlugin/admin/suggestion/content/scope.html.twig'
+                priority: 180
+            generate:
+                template: '@CylleneDigitalSyliusAiTranslationPlugin/admin/suggestion/content/generate.html.twig'
+                priority: 150
+            journal:
+                template: '@CylleneDigitalSyliusAiTranslationPlugin/admin/suggestion/content/journal.html.twig'
+                priority: 80
+            review_modal:
+                template: '@CylleneDigitalSyliusAiTranslationPlugin/admin/suggestion/content/review_modal.html.twig'
+                priority: 50
+
+        'cyllene_digital_sylius_ai_translation.admin.suggestion.index.content.header':
+            breadcrumbs:
+                template: '@CylleneDigitalSyliusAiTranslationPlugin/admin/suggestion/header/breadcrumbs.html.twig'
+                priority: 100
+            title_block:
+                template: '@CylleneDigitalSyliusAiTranslationPlugin/admin/suggestion/header/title_block.html.twig'
+                priority: 0
+
+        'cyllene_digital_sylius_ai_translation.admin.suggestion.index.content.grid':
+            no_data_block:
+                template: '@CylleneDigitalSyliusAiTranslationPlugin/admin/suggestion/grid/no_results.html.twig'
+                priority: 0
+
+        # The channel form gains an "AI translation" section, on creation and on update alike: the
+        # prompt context of that channel's generation runs (see ChannelTypeExtension).
+        'sylius_admin.channel.create.content.form.sections':
+            ai_translation:
+                template: '@CylleneDigitalSyliusAiTranslationPlugin/admin/channel/form/sections/ai_translation.html.twig'
+                priority: -100
+
+        'sylius_admin.channel.create.content.form.sections.ai_translation':
+            prompt_context:
+                template: '@CylleneDigitalSyliusAiTranslationPlugin/admin/channel/form/sections/ai_translation/prompt_context.html.twig'
+                priority: 0
+
+        'sylius_admin.channel.update.content.form.sections':
+            ai_translation:
+                template: '@CylleneDigitalSyliusAiTranslationPlugin/admin/channel/form/sections/ai_translation.html.twig'
+                priority: -100
+
+        'sylius_admin.channel.update.content.form.sections.ai_translation':
+            prompt_context:
+                template: '@CylleneDigitalSyliusAiTranslationPlugin/admin/channel/form/sections/ai_translation/prompt_context.html.twig'
+                priority: 0

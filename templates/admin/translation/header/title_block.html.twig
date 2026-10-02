@@ -1,0 +1,127 @@
+{% import '@SyliusAdmin/shared/helper/header.html.twig' as header %}
+
+{% set pending_suggestion_count = hookable_metadata.context.pending_suggestion_count %}
+{% set export_formats = hookable_metadata.context.export_formats %}
+{% set scope_params = hookable_metadata.context.scope_params %}
+
+<div class="row mt-3 row-gap-2">
+    <div class="col-12 col-md">
+        <div class="d-md-flex gap-2 align-items-center">
+            {{ header.h1('cyllene_digital_sylius_ai_translation.ui.translation_management'|trans, 'tabler:language', 'cyllene_digital_sylius_ai_translation.ui.translation_management_description'|trans) }}
+        </div>
+    </div>
+    <div class="col-12 col-md-auto ms-auto d-print-none">
+        <div class="btn-list">
+            {% if is_granted('cyllene_digital_sylius_ai_translation.import') %}
+                <button type="button" class="btn" data-bs-toggle="modal" data-bs-target="#import-overrides-modal">
+                    {{ ux_icon('tabler:upload') }}
+                    {{ 'cyllene_digital_sylius_ai_translation.ui.import'|trans }}
+                </button>
+            {% endif %}
+            {# The export downloads exactly the displayed view: same criteria, same channel —
+               the whole result set, untranslated rows included as empty values. #}
+            <div class="dropdown" title="{{ 'cyllene_digital_sylius_ai_translation.ui.export_view_help'|trans }}">
+                <button type="button" class="btn dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                    {{ ux_icon('tabler:download') }}
+                    {{ 'cyllene_digital_sylius_ai_translation.ui.export_view'|trans }}
+                </button>
+                <div class="dropdown-menu">
+                    {% for format in export_formats %}
+                        <a class="dropdown-item" href="{{ path('cyllene_digital_sylius_ai_translation_admin_translation_export', app.request.query.all|merge({format: format})) }}">
+                            {{ ux_icon('tabler:file-export') }}
+                            {{ format|upper }}
+                        </a>
+                    {% endfor %}
+                </div>
+            </div>
+            {% if pending_suggestion_count > 0 %}
+                <a href="{{ path('cyllene_digital_sylius_ai_translation_admin_suggestion_index', scope_params) }}" class="btn btn-warning">
+                    {{ ux_icon('tabler:sparkles') }}
+                    {{ 'cyllene_digital_sylius_ai_translation.ui.pending_suggestions'|trans({'count': pending_suggestion_count}) }}
+                </a>
+            {% else %}
+                <a href="{{ path('cyllene_digital_sylius_ai_translation_admin_suggestion_index', scope_params) }}" class="btn">
+                    {{ ux_icon('tabler:sparkles') }}
+                    {{ 'cyllene_digital_sylius_ai_translation.ui.ai_suggestions'|trans }}
+                </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% if is_granted('cyllene_digital_sylius_ai_translation.import') %}
+<div class="modal fade" id="import-overrides-modal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <form method="POST" action="{{ path('cyllene_digital_sylius_ai_translation_admin_translation_import') }}" enctype="multipart/form-data">
+                <input type="hidden" name="_token" value="{{ csrf_token('cyllene_digital_sylius_ai_translation_transfer') }}">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        {{ ux_icon('tabler:upload') }}
+                        {{ 'cyllene_digital_sylius_ai_translation.ui.import'|trans }}
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ 'sylius.ui.cancel'|trans }}"></button>
+                </div>
+                <div class="modal-body">
+                    <label for="import_file" class="form-label">{{ 'cyllene_digital_sylius_ai_translation.ui.import_file'|trans }}</label>
+                    <input
+                        id="import_file"
+                        type="file"
+                        name="file"
+                        accept=".xlf,.xliff,.csv"
+                        class="form-control"
+                        required
+                    >
+                    <small class="form-hint">{{ 'cyllene_digital_sylius_ai_translation.ui.import_help'|trans }}
+                        {# The size is the plugin's controller's to give: a host rendering this hook from its own gets no figure rather than a wrong one. #}
+                        {% if hookable_metadata.context.import_max_megabytes is defined %}
+                            {{ 'cyllene_digital_sylius_ai_translation.ui.import_max_size'|trans({max: hookable_metadata.context.import_max_megabytes}) }}
+                        {% endif %}
+                    </small>
+
+                    <details class="mt-3 cyllene-translation-import-formats">
+                        <summary class="text-secondary">
+                            {{ 'cyllene_digital_sylius_ai_translation.ui.import_format_help_title'|trans }}
+                        </summary>
+                        <div class="mt-2 small">
+                            <p class="mb-1 fw-bold">XLIFF</p>
+                            <pre class="mb-3"><code>{% apply escape %}<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" version="1.2">
+  <file original="shop/Product/messages" source-language="fr_FR"
+        target-language="fr_FR" datatype="plaintext">
+    <body>
+      <trans-unit id="1" resname="product.out_of_stock">
+        <source>product.out_of_stock</source>
+        <target>Rupture de stock</target>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>{% endapply %}</code></pre>
+                            <p class="mb-1 fw-bold">CSV</p>
+                            <pre class="mb-3"><code>locale,catalogue,translation_key,value,scope
+fr_FR,shop/Product/messages,product.out_of_stock,"Rupture de stock",</code></pre>
+                            <p class="mb-0 text-secondary">{{ 'cyllene_digital_sylius_ai_translation.ui.import_format_scope_note'|trans }}</p>
+                        </div>
+                    </details>
+
+                    <div class="mt-3 small text-secondary">
+                        {{ ux_icon('tabler:file-download') }}
+                        {{ 'cyllene_digital_sylius_ai_translation.ui.import_template_download'|trans }}
+                        {% for format in export_formats %}
+                            <a href="{{ path('cyllene_digital_sylius_ai_translation_admin_translation_import_template', {format: format}) }}">{{ format|upper }}</a>{{ not loop.last ? ' · ' }}
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-link link-secondary" data-bs-dismiss="modal">
+                        {{ 'sylius.ui.cancel'|trans }}
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        {{ ux_icon('tabler:upload') }}
+                        {{ 'cyllene_digital_sylius_ai_translation.ui.import'|trans }}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}

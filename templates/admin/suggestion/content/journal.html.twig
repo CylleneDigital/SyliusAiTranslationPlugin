@@ -1,0 +1,59 @@
+{#
+    The last generation runs of the channel being browsed, failures included: generation is
+    asynchronous, so this is where a run that produced nothing - or failed before producing
+    anything - shows. Read from the engine's journal (GenerationLog).
+#}
+{% import '@CylleneDigitalSyliusAiTranslationPlugin/admin/shared/flags.html.twig' as flags %}
+
+{% set generation_logs = hookable_metadata.context.generation_logs %}
+
+{% if generation_logs|length > 0 %}
+    <div class="container-xl">
+        <div class="card mt-4" data-test-generation-journal>
+            <div class="card-header">
+                <h3 class="card-title">
+                    {{ ux_icon('tabler:history') }}
+                    {{ 'cyllene_digital_sylius_ai_translation.ui.generation_journal'|trans }}
+                </h3>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-vcenter card-table">
+                    <thead>
+                        <tr>
+                            <th>{{ 'cyllene_digital_sylius_ai_translation.ui.generation_journal_date'|trans }}</th>
+                            <th>{{ 'cyllene_digital_sylius_ai_translation.ui.catalogue'|trans }}</th>
+                            <th>{{ 'cyllene_digital_sylius_ai_translation.ui.locale'|trans }}</th>
+                            <th>{{ 'cyllene_digital_sylius_ai_translation.ui.provider'|trans }}</th>
+                            <th>{{ 'cyllene_digital_sylius_ai_translation.ui.generation_journal_result'|trans }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in generation_logs %}
+                            <tr>
+                                <td class="text-nowrap text-secondary">{{ log.createdAt|format_datetime('short', 'short') }}</td>
+                                <td><code class="small">{{ log.catalogue }}</code></td>
+                                <td class="text-nowrap">{{ log.sourceLocale }} → {{ log.targetLocale }}</td>
+                                <td>{{ log.provider }}</td>
+                                <td>
+                                    {# isFailure(), spelled out: `log.failure` would reach the static factory of that name. #}
+                                    {% if log.isFailure() %}
+                                        <span class="badge bg-danger text-white">
+                                            {{ ux_icon('tabler:alert-circle') }}
+                                            {{ 'cyllene_digital_sylius_ai_translation.ui.generation_failed'|trans }}
+                                        </span>
+                                        <div class="text-secondary small text-break">{{ log.errorMessage }}</div>
+                                    {% endif %}
+                                    {% if not log.isFailure() or log.suggestionsCreated > 0 %}
+                                        <span class="badge {{ log.suggestionsCreated > 0 ? 'bg-success-lt' : 'bg-secondary-lt' }}">
+                                            {{ 'cyllene_digital_sylius_ai_translation.ui.generation_journal_created'|trans({'count': log.suggestionsCreated}) }}
+                                        </span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+{% endif %}

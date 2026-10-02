@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="100%" viewBox="0 0 680 272" role="img" font-family="system-ui, -apple-system, Segoe UI, Roboto, sans-serif">
+<title>AI Translation — Sylius plugin</title>
+<desc>Translation review in the Sylius admin: suggestions card with approvals</desc>
+<defs><clipPath id="cp"><rect width="680" height="272" rx="14"/></clipPath></defs>
+<g clip-path="url(#cp)">
+<rect width="680" height="272" fill="#151122"/>
+<circle cx="625" cy="18" r="95" fill="#1d1735"/>
+<circle cx="70" cy="268" r="75" fill="#1a142e"/>
+<rect y="268" width="680" height="4" fill="#2dd4bf"/>
+<rect x="48" y="44" width="108" height="24" rx="12" fill="#122b2c" stroke="#2dd4bf" stroke-width="0.5"/>
+<text x="102" y="60" text-anchor="middle" font-size="12" fill="#5eead4">Sylius Plugin</text>
+<text x="48" y="118" font-size="42" font-weight="500" fill="#f5f3ff">AI Translation</text>
+<rect x="48" y="132" width="64" height="5" rx="2.5" fill="#2dd4bf"/>
+<text x="48" y="172" font-size="14" fill="#b6b0c9">Review translations in the Sylius admin</text>
+<text x="48" y="224" font-size="12" fill="#7d7694" font-family="ui-monospace, Menlo, Consolas, monospace">suggestions · approval · live overrides</text>
+<rect x="420" y="56" width="220" height="164" rx="10" fill="#0f0c1d" stroke="#2dd4bf" stroke-opacity="0.5" stroke-width="1"/>
+<text x="436" y="84" font-size="12" fill="#b6b0c9">Suggestions</text>
+<path transform="translate(612,78) scale(0.6)" d="M0 -14 Q3.5 -3.5 14 0 Q3.5 3.5 0 14 Q-3.5 3.5 -14 0 Q-3.5 -3.5 0 -14" fill="#c4b5fd"/>
+<line x1="436" y1="96" x2="624" y2="96" stroke="#2a2440" stroke-width="1"/>
+<rect x="436" y="110" width="110" height="6" rx="3" fill="#2a2440"/>
+<circle cx="608" cy="113" r="9" fill="#122b2c" stroke="#2dd4bf" stroke-width="1"/>
+<polyline points="604,113 607,116 613,110" fill="none" stroke="#2dd4bf" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="436" y="146" width="88" height="6" rx="3" fill="#2a2440"/>
+<circle cx="608" cy="149" r="9" fill="#122b2c" stroke="#2dd4bf" stroke-width="1"/>
+<polyline points="604,149 607,152 613,146" fill="none" stroke="#2dd4bf" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="436" y="182" width="122" height="6" rx="3" fill="#2a2440"/>
+<circle cx="608" cy="185" r="9" fill="#251d3d" stroke="#a78bfa" stroke-width="1"/>
+<circle cx="604" cy="185" r="1.2" fill="#c4b5fd"/><circle cx="608" cy="185" r="1.2" fill="#c4b5fd"/><circle cx="612" cy="185" r="1.2" fill="#c4b5fd"/>
+</g>
+</svg>

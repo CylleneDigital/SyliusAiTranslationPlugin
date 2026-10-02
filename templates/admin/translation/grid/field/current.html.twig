@@ -1,0 +1,21 @@
+{% import '@CylleneDigitalSyliusAiTranslationPlugin/admin/translation/grid/_edit_trigger.html.twig' as edit %}
+{% import '@CylleneDigitalSyliusAiTranslationPlugin/admin/shared/inherited_from.html.twig' as inherited %}
+<a class="d-block text-reset text-decoration-none" {{ edit.attributes(data, true) }}>
+    {% if data.hasOverride %}
+        <span class="badge bg-primary-lt">{{ ux_icon('tabler:edit') }}</span>
+        <span class="text-primary fw-medium text-truncate d-inline-block align-middle cyllene-translation-cell-truncate">{{ data.override }}</span>
+    {% elseif data.inherited is not null %}
+        <span class="text-truncate d-inline-block cyllene-translation-cell-truncate">{{ data.inherited }}</span>
+        <div class="text-secondary small">
+            {{ ux_icon('tabler:arrow-back-up', {height: 14, width: 14}) }}
+            {{ inherited.label(data.inheritedFrom, data.locale, data.scope) }}
+        </div>
+    {% elseif data.missing %}
+        <span class="badge bg-warning-lt">
+            {{ ux_icon('tabler:language-off', {height: 14, width: 14}) }}
+            {{ 'cyllene_digital_sylius_ai_translation.ui.untranslated'|trans }}
+        </span>
+    {% else %}
+        <span class="text-truncate d-inline-block cyllene-translation-cell-truncate">{{ data.original }}</span>
+    {% endif %}
+</a>

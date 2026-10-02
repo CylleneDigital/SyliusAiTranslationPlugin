@@ -1,0 +1,9 @@
+{% import '@CylleneDigitalSyliusAiTranslationPlugin/admin/suggestion/grid/_review_trigger.html.twig' as review %}
+{# Opens the review modal: full texts, editable value, approve or reject from there.
+   Same structure as Sylius' delete trigger: the tooltip on a wrapper, the modal trigger
+   on the button itself (one data-bs-toggle per element). #}
+<div data-bs-toggle="tooltip" data-bs-title="{{ action.label|trans }}">
+    <button type="button" class="btn btn-icon btn-outline-success" {{ review.attributes(data) }}>
+        {{ ux_icon(action.icon|default('tabler:pencil-check')) }}
+    </button>
+</div>

@@ -1,0 +1,74 @@
+# Dev shop (`sylius:fixtures:load default`): two channels that do not expose the same locales, and
+# translations in every state, to compare the global view with each channel's - what a channel
+# inherits, what it overrides, which locales its screens narrow to.
+#
+#   FASHION_WEB  en_US (default), fr_FR, de_DE   answers on SYLIUS_FIXTURES_HOSTNAME (default: localhost)
+#   B2B_WEB      en_US (default), fr_FR          `b2b.` + that host, or `?_channel_code=B2B_WEB` (dev only)
+#
+# The texts are the test application's own catalogue (tests/TestApplication/translations), written
+# in English and partly in French: German starts from nothing.
+services:
+    Tests\CylleneDigital\SyliusAiTranslationPlugin\Fixture\AiTranslationFixture:
+        arguments:
+            - '@CylleneDigital\AiTranslationBundle\Override\TranslationManagerInterface'
+            - '@CylleneDigital\AiTranslationBundle\Scope\ScopeParametersManager'
+            - '@doctrine.orm.entity_manager'
+        tags: ['sylius_fixtures.fixture']
+
+sylius_fixtures:
+    suites:
+        default:
+            fixtures:
+                channel:
+                    options:
+                        custom:
+                            fashion_web_store:
+                                locales:
+                                    - '%locale%'
+                                    - 'fr_FR'
+                                    - 'de_DE'
+                                # Otherwise picked at random among the locales.
+                                default_locale: '%locale%'
+                            b2b_web_store:
+                                name: 'B2B Web Store'
+                                code: 'B2B_WEB'
+                                locales:
+                                    - '%locale%'
+                                    - 'fr_FR'
+                                default_locale: '%locale%'
+                                currencies:
+                                    - 'USD'
+                                enabled: true
+                                hostname: 'b2b.%env(resolve:SYLIUS_FIXTURES_HOSTNAME)%'
+                                menu_taxon: 'category'
+                # Sylius' order fixture fetch-joins product translations in the order's locale only,
+                # then saves an empty en_US translation: orders in fr_FR fail at random. The plugin
+                # needs no order.
+                order: false
+                ai_translation:
+                    priority: -10
+                    options:
+                        contexts:
+                            B2B_WEB: 'Professional buyers. Formal tone, no exclamation mark, no emoji.'
+                        overrides:
+                            # For every channel: the French welcome the files do not have.
+                            - { key: app.welcome, locale: fr_FR, value: 'Bienvenue dans la boutique' }
+                            # For one channel: B2B says it its own way, FASHION_WEB keeps the one above.
+                            - { key: app.welcome, locale: fr_FR, value: 'Bienvenue sur votre espace professionnel', channel: B2B_WEB }
+                            - { key: app.welcome, locale: en_US, value: 'Welcome to your trade account', channel: B2B_WEB }
+                            # A file value replaced, in the fashion channel only.
+                            - { key: product.add_to_cart, catalogue: shop/Product/messages, locale: fr_FR, value: 'Je le veux', channel: FASHION_WEB }
+                        suggestions:
+                            # Pending for every channel.
+                            - { key: product.out_of_stock, catalogue: shop/Product/messages, locale: fr_FR, value: 'En rupture de stock', confidence: 0.95 }
+                            - { key: dashboard.saved, catalogue: admin/Dashboard/flashes, locale: fr_FR, value: 'Tableau de bord enregistré', confidence: 0.72 }
+                            - { key: checkout.pay, catalogue: shop/Checkout/messages, locale: fr_FR, error: 'The provider answered 429 (rate limit)' }
+                            # Pending for one channel: German only exists on FASHION_WEB.
+                            - { key: app.welcome, locale: de_DE, value: 'Willkommen im Shop', channel: FASHION_WEB, confidence: 0.93 }
+                            - { key: app.dashboard, locale: de_DE, value: 'Übersicht', channel: FASHION_WEB, confidence: 0.61 }
+                            - { key: product.out_of_stock, catalogue: shop/Product/messages, locale: fr_FR, value: 'Indisponible à la commande', channel: B2B_WEB, confidence: 0.88 }
+                        runs:
+                            - { catalogue: shop/Product/messages, locale: fr_FR, created: 1 }
+                            - { catalogue: shop/Checkout/messages, locale: fr_FR, error: 'The provider answered 429 (rate limit)' }
+                            - { catalogue: messages, locale: de_DE, channel: FASHION_WEB, created: 2 }
+                            - { catalogue: shop/Product/messages, locale: fr_FR, channel: B2B_WEB, created: 1 }

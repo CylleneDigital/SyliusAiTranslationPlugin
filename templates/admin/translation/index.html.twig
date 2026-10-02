@@ -1,0 +1,11 @@
+{% extends '@SyliusAdmin/shared/layout/base.html.twig' %}
+
+{% block title %}
+    {{ 'cyllene_digital_sylius_ai_translation.ui.translation_management'|trans }} {{ parent() }}
+{% endblock %}
+
+{# A Sylius index page: the plugin's hooks first, Sylius' common index (grid block
+   included) as the fallback — see config/twig_hooks/admin.yaml for what the plugin plugs in. #}
+{% block body %}
+    {% hook ['cyllene_digital_sylius_ai_translation.admin.translation.index', 'sylius_admin.common.index'] %}
+{% endblock %}

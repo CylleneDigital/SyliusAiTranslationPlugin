@@ -1,0 +1,15 @@
+{# Applies the suggestion as-is: a POST per row, the screen's csrf intention. An errored
+   row has no value to apply — its button is disabled, the review modal is the way in. #}
+{% if data.generationError %}
+    <button type="button" class="btn btn-icon btn-success" disabled
+            data-bs-toggle="tooltip" data-bs-title="{{ 'cyllene_digital_sylius_ai_translation.ui.suggestion_value_required_hint'|trans }}">
+        {{ ux_icon(action.icon|default('tabler:check')) }}
+    </button>
+{% else %}
+    <form action="{{ path('cyllene_digital_sylius_ai_translation_admin_suggestion_approve', {id: data.id}) }}" method="post" class="d-inline">
+        <input type="hidden" name="_token" value="{{ csrf_token('cyllene_digital_sylius_ai_translation_suggestion') }}">
+        <button type="submit" class="btn btn-icon btn-success" data-bs-toggle="tooltip" data-bs-title="{{ action.label|trans }}">
+            {{ ux_icon(action.icon|default('tabler:check')) }}
+        </button>
+    </form>
+{% endif %}

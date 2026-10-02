@@ -1,0 +1,112 @@
+name: Engine drift
+
+# Runs the plugin against the engine's unreleased `main`: a change there that breaks the plugin
+# is caught before the engine is tagged, not after. Not a pull request check - a red run says
+# something about the engine, not about the pull request - and not part of `Build complete`.
+on:
+    push:
+        branches:
+            - main
+    schedule:
+        -
+            cron: "0 6 * * 1"
+    workflow_dispatch: ~
+
+concurrency:
+    group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
+
+permissions:
+    contents: read
+    issues: write
+
+jobs:
+    engine-main:
+        runs-on: ubuntu-24.04
+        timeout-minutes: 30
+
+        name: "Engine dev-main"
+
+        env:
+            APP_ENV: test
+
+        steps:
+            -
+                uses: actions/checkout@v7
+
+            # Before the build action resolves the dependencies: it installs what composer.json asks.
+            -
+                name: Require the engine's main branch
+                run: composer require --no-update --no-interaction "cyllene-digital/ai-translation-bundle:dev-main"
+
+            -
+                name: Build Sylius Test Application
+                uses: SyliusLabs/BuildTestAppAction@fbdfc158a99f540fc3bbe554b46120d14444f2f4 # v4.3.0
+                with:
+                    e2e_js: "yes"
+                    cache_key: "${{ runner.os }}-php-8.4-composer-engine-main-${{ hashFiles('**/composer.json') }}"
+                    cache_restore_key: "${{ runner.os }}-php-8.4-composer-"
+                    database: "mysql:8.4"
+                    node_version: "22.x"
+                    php_version: "8.4"
+                    sylius_version: "~2.3.0"
+                    symfony_version: "^7.4"
+                    load_fixtures: "no"
+
+            -
+                name: Show the engine commit under test
+                id: engine
+                run: |
+                    composer show cyllene-digital/ai-translation-bundle | grep -E "^(versions|source)"
+                    echo "commit=$(composer show cyllene-digital/ai-translation-bundle | sed -n 's/^source *: .* \([0-9a-f]\{40\}\)$/\1/p')" >> "$GITHUB_OUTPUT"
+
+            -
+                name: Validate container
+                run: vendor/bin/console lint:container --env=test
+
+            # PHPStan first: a renamed method or a changed signature is reported by name,
+            # where the tests would only show the request that hit it.
+            -
+                name: Run PHPStan
+                run: vendor/bin/phpstan analyse --ansi --no-progress --memory-limit=1G
+
+            -
+                name: Run tests
+                run: vendor/bin/phpunit --colors=always
+
+            # One issue per engine commit: the title carries it, so a later run on the same commit
+            # finds the issue (open or closed) instead of opening another.
+            -
+                name: Open an issue when the scheduled run fails
+                if: failure() && github.event_name == 'schedule'
+                env:
+                    GH_TOKEN: ${{ github.token }}
+                    ENGINE_COMMIT: ${{ steps.engine.outputs.commit }}
+                run: |
+                    short="$(printf '%s' "${ENGINE_COMMIT:-unknown}" | cut -c1-7)"
+                    title="Engine dev-main (${short}) breaks the plugin"
+                    existing="$(gh issue list --state all --search "\"${title}\" in:title" --json number --jq 'length')"
+                    if [ "${existing}" != "0" ]; then
+                      echo "Issue already exists for ${short}."
+                      exit 0
+                    fi
+
+                    gh issue create --title "${title}" --body "$(cat <<EOF
+                    The plugin no longer passes against the engine's \`main\` branch
+                    ([\`${short}\`](https://github.com/CylleneDigital/AiTranslationBundle/commit/${ENGINE_COMMIT})):
+                    ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}
+
+                    To reproduce:
+
+                    \`\`\`bash
+                    composer require --no-update --no-interaction "cyllene-digital/ai-translation-bundle:dev-main"
+                    composer update cyllene-digital/ai-translation-bundle --no-interaction --no-progress
+                    vendor/bin/phpstan analyse --ansi --no-progress --memory-limit=1G
+                    vendor/bin/phpunit --colors=always
+                    \`\`\`
+
+                    Either the engine broke something it should not have (report it there before it is
+                    tagged), or the plugin has to follow: adapt it and raise the constraint in
+                    \`composer.json\` once the engine is released.
+                    EOF
+                    )"

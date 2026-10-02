@@ -1,0 +1,6 @@
+{% from '@SyliusAdmin/shared/helper/breadcrumbs.html.twig' import breadcrumbs %}
+
+{{ breadcrumbs([
+    { name: 'sylius.ui.dashboard', 'url': path('sylius_admin_dashboard'), 'active': false },
+    { name: 'cyllene_digital_sylius_ai_translation.ui.translation_management'|trans, 'active': true },
+]) }}

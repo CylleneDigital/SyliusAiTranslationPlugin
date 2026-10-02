@@ -1,0 +1,9 @@
+{# The channel filter of the whole page — every block below follows it. #}
+{# cyllene-translation-screen: what admin.css recognises the plugin's screens by. #}
+<div class="container-xl cyllene-translation-screen">
+    {% include '@CylleneDigitalSyliusAiTranslationPlugin/admin/shared/scope_selector.html.twig' with {
+        scope: hookable_metadata.context.scope,
+        available_scopes: hookable_metadata.context.available_scopes,
+        route: 'cyllene_digital_sylius_ai_translation_admin_translation_index',
+    } only %}
+</div>

@@ -1,0 +1,173 @@
+{#
+    The generation form. Runs generate FOR the channel being browsed ('' = global): the
+    suggestions carry the scope and, once approved, become that channel's overrides.
+#}
+{% if is_granted('cyllene_digital_sylius_ai_translation.generate') %}
+{% import '@CylleneDigitalSyliusAiTranslationPlugin/admin/shared/flags.html.twig' as flags %}
+
+{% set scope = hookable_metadata.context.scope %}
+{% set available_scopes = hookable_metadata.context.available_scopes %}
+{% set available_providers = hookable_metadata.context.available_providers %}
+{% set available_catalogues = hookable_metadata.context.available_catalogues %}
+{% set available_locales = hookable_metadata.context.available_locales %}
+{% set source_locale_default = hookable_metadata.context.source_locale_default %}
+{# category label => (catalogue label => identifier), for the <optgroup> select #}
+{% set catalogue_groups = hookable_metadata.context.catalogue_groups %}
+{% set csrf = csrf_token('cyllene_digital_sylius_ai_translation_suggestion') %}
+
+<div class="container-xl"
+     data-controller="ait-admin-generation"
+     data-ait-admin-generation-catalogue-count-value="{{ available_catalogues|length }}"
+     data-ait-admin-generation-estimate-url-value="{{ path('cyllene_digital_sylius_ai_translation_admin_suggestion_estimate') }}"
+     data-ait-admin-generation-estimate-error-value="{{ 'cyllene_digital_sylius_ai_translation.ui.estimate_error'|trans }}">
+    {% if available_providers is empty %}
+        <div class="alert alert-warning mb-4">
+            {{ ux_icon('tabler:alert-triangle') }}
+            <div>
+                <h4 class="alert-title">{{ 'cyllene_digital_sylius_ai_translation.ui.no_ai_provider_configured'|trans }}</h4>
+                <div class="text-secondary">{{ 'cyllene_digital_sylius_ai_translation.ui.no_ai_provider_configured_hint'|trans }}</div>
+            </div>
+        </div>
+    {% else %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h3 class="card-title">
+                    {{ ux_icon('tabler:sparkles') }}
+                    {{ 'cyllene_digital_sylius_ai_translation.ui.generate_suggestions'|trans }}
+                    {% if scope != '' %}
+                        <span class="badge bg-primary-lt ms-2">{{ 'cyllene_digital_sylius_ai_translation.ui.generate_for_scope'|trans({'channel': available_scopes[scope]}) }}</span>
+                    {% endif %}
+                </h3>
+            </div>
+            <div class="card-body">
+                {% if scope != '' %}
+                    <p class="text-secondary small">
+                        {{ ux_icon('tabler:info-circle') }}
+                        {{ 'cyllene_digital_sylius_ai_translation.ui.generate_for_scope_help'|trans({'channel': available_scopes[scope]}) }}
+                    </p>
+                {% endif %}
+                <form method="POST" action="{{ path('cyllene_digital_sylius_ai_translation_admin_suggestion_generate') }}" id="generate-form" data-ait-admin-generation-target="form" data-action="submit->ait-admin-generation#guard change->ait-admin-generation#clearEstimate">
+                    <input type="hidden" name="_token" value="{{ csrf }}">
+                    {# The run generates FOR the channel being browsed ('' = global). #}
+                    <input type="hidden" name="scope" value="{{ scope }}">
+                    <div class="row row-cards align-items-end">
+                        <div class="col-md-2">
+                            <label for="generate_source" class="form-label" title="{{ 'cyllene_digital_sylius_ai_translation.ui.source_locale_help'|trans }}">
+                                {{ 'cyllene_digital_sylius_ai_translation.ui.source_locale'|trans }}
+                                {{ ux_icon('tabler:help-circle', {class: 'icon text-secondary', height: 16, width: 16}) }}
+                            </label>
+                            {# Source defaults to the reference cascade: channel default, else the default locale. #}
+                            {% set preselect_source = app.request.query.all.source|default(source_locale_default) %}
+                            {# A coverage link names the default locale, which a channel may not expose. #}
+                            {% if preselect_source not in available_locales %}
+                                {% set preselect_source = source_locale_default %}
+                            {% endif %}
+                            <select id="generate_source" name="source_locale" class="form-select">
+                                {% for loc in available_locales %}
+                                    <option value="{{ loc }}" {{ loc == preselect_source ? 'selected' }}>{{ flags.name(loc) }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="generate_target" class="form-label" title="{{ 'cyllene_digital_sylius_ai_translation.ui.target_locale_help'|trans }}">
+                                {{ 'cyllene_digital_sylius_ai_translation.ui.target_locale'|trans }}
+                                {{ ux_icon('tabler:help-circle', {class: 'icon text-secondary', height: 16, width: 16}) }}
+                            </label>
+                            {# Target defaults to the first locale that differs from the source - also for
+                               one the URL names and the view does not offer, or names twice. #}
+                            {% set preselect_target = app.request.query.all.target|default('') %}
+                            {% if preselect_target not in available_locales or preselect_target == preselect_source %}
+                                {% set preselect_target = available_locales|filter(l => l != preselect_source)|first %}
+                            {% endif %}
+                            <select id="generate_target" name="target_locale" class="form-select">
+                                {% for loc in available_locales %}
+                                    <option value="{{ loc }}" {{ loc == preselect_target ? 'selected' }}>{{ flags.name(loc) }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="generate_catalogue" class="form-label" title="{{ 'cyllene_digital_sylius_ai_translation.ui.generate_catalogue_help'|trans }}">
+                                {{ 'cyllene_digital_sylius_ai_translation.ui.catalogue'|trans }}
+                                {{ ux_icon('tabler:help-circle', {class: 'icon text-secondary', height: 16, width: 16}) }}
+                            </label>
+                            <select id="generate_catalogue" name="catalogue" class="form-select" data-ait-admin-generation-target="catalogue">
+                                <option value="">{{ 'cyllene_digital_sylius_ai_translation.ui.all_catalogues'|trans }}</option>
+                                {% for category, catalogues in catalogue_groups %}
+                                    <optgroup label="{{ category }}">
+                                        {% for label, identifier in catalogues %}
+                                            <option value="{{ identifier }}">{{ label }}</option>
+                                        {% endfor %}
+                                    </optgroup>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="generate_provider" class="form-label" title="{{ 'cyllene_digital_sylius_ai_translation.ui.generate_provider_help'|trans }}">
+                                {{ 'cyllene_digital_sylius_ai_translation.ui.provider'|trans }}
+                                {{ ux_icon('tabler:help-circle', {class: 'icon text-secondary', height: 16, width: 16}) }}
+                            </label>
+                            <select id="generate_provider" name="provider" class="form-select">
+                                {% for prov in available_providers %}
+                                    <option value="{{ prov }}" {{ prov == hookable_metadata.context.default_provider ? 'selected' }}>{{ prov }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-check form-switch mb-1" title="{{ 'cyllene_digital_sylius_ai_translation.ui.all_keys_help'|trans }}">
+                                <input type="checkbox" name="all" value="1" class="form-check-input">
+                                <span class="form-check-label">
+                                    {{ 'cyllene_digital_sylius_ai_translation.ui.all_keys'|trans }}
+                                    {{ ux_icon('tabler:help-circle', {class: 'icon text-secondary', height: 16, width: 16}) }}
+                                </span>
+                            </label>
+                            <label class="form-check form-switch mb-2" title="{{ 'cyllene_digital_sylius_ai_translation.ui.retry_errors_help'|trans }}">
+                                <input type="checkbox" name="retry_errors" value="1" class="form-check-input">
+                                <span class="form-check-label">
+                                    {{ 'cyllene_digital_sylius_ai_translation.ui.retry_errors'|trans }}
+                                    {{ ux_icon('tabler:help-circle', {class: 'icon text-secondary', height: 16, width: 16}) }}
+                                </span>
+                            </label>
+                        </div>
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-primary w-100">
+                                {{ ux_icon('tabler:sparkles') }}
+                                {{ 'cyllene_digital_sylius_ai_translation.ui.generate'|trans }}
+                            </button>
+                        </div>
+                    </div>
+                    <div class="mt-3 d-flex align-items-center gap-2">
+                        <button type="button" class="btn btn-outline-secondary btn-sm" data-ait-admin-generation-target="estimateButton" data-action="ait-admin-generation#estimate">
+                            {{ ux_icon('tabler:calculator') }}
+                            {{ 'cyllene_digital_sylius_ai_translation.ui.estimate_button'|trans }}
+                        </button>
+                        <span class="text-secondary small" data-ait-admin-generation-target="estimateResult"></span>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        {# A blank catalogue fans one billed generation out to every catalogue: the submit
+           goes through Sylius' confirmation modal first (assets/admin/js/generation-controller.js). The
+           confirm button submits the form from outside it through the form attribute. #}
+        {% component 'sylius_admin:confirmation_modal' with {modal_id: 'generate-all-modal', type: 'generate-all'} %}
+            {% block trigger %}
+                <button type="button" class="d-none" data-ait-admin-generation-target="allTrigger" data-bs-toggle="modal" data-bs-target="#generate-all-modal"></button>
+            {% endblock %}
+
+            {% block header %}
+                <h1 class="modal-title py-5">{{ 'cyllene_digital_sylius_ai_translation.ui.confirm_generate_all'|trans({'count': available_catalogues|length}) }}</h1>
+            {% endblock %}
+
+            {% block footer %}
+                {% import '@SyliusAdmin/shared/helper/button.html.twig' as button %}
+                {{ button.default({ text: 'sylius.ui.cancel'|trans, attr: 'data-bs-dismiss=modal' }) }}
+                {# Submits the form from outside it; the attribute tells the controller the run is confirmed. #}
+                <button type="submit" form="generate-form" class="btn btn-primary" data-generation-confirmed>
+                    {{ ux_icon('tabler:sparkles') }}
+                    {{ 'cyllene_digital_sylius_ai_translation.ui.generate'|trans }}
+                </button>
+            {% endblock %}
+        {% endcomponent %}
+    {% endif %}
+</div>
+{% endif %}

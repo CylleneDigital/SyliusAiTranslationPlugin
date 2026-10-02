@@ -1,0 +1,108 @@
+# Admin routes of the plugin, imported by config/routes.yaml under the admin prefix (hence
+# behind the admin firewall). A host imports that file, not this one.
+#
+# Declared here rather than with #[Route]: attribute routes on an autoconfigured
+# controller are also picked up by the host's `routing.controllers` import (Symfony
+# 7.4+), which registers them a second time - without the admin prefix.
+
+# Catalogue screen.
+cyllene_digital_sylius_ai_translation_admin_translation_index:
+    path: /translations
+    methods: [GET]
+    defaults:
+        _controller: CylleneDigital\SyliusAiTranslationPlugin\Controller\Admin\Translation\IndexController
+
+cyllene_digital_sylius_ai_translation_admin_translation_save:
+    path: /translations/save
+    methods: [POST]
+    defaults:
+        _controller: CylleneDigital\SyliusAiTranslationPlugin\Controller\Admin\Translation\SaveController
+
+cyllene_digital_sylius_ai_translation_admin_translation_reset:
+    path: /translations/reset
+    methods: [POST]
+    defaults:
+        _controller: CylleneDigital\SyliusAiTranslationPlugin\Controller\Admin\Translation\ResetController
+
+cyllene_digital_sylius_ai_translation_admin_translation_purge_orphans:
+    path: /translations/purge-orphans
+    methods: [POST]
+    defaults:
+        _controller: CylleneDigital\SyliusAiTranslationPlugin\Controller\Admin\Translation\PurgeOrphansController
+
+cyllene_digital_sylius_ai_translation_admin_translation_export:
+    path: /translations/export/{format}
+    methods: [GET]
+    defaults:
+        _controller: CylleneDigital\SyliusAiTranslationPlugin\Controller\Admin\Translation\ExportController
+
+cyllene_digital_sylius_ai_translation_admin_translation_import_template:
+    path: /translations/import-template/{format}
+    methods: [GET]
+    defaults:
+        _controller: CylleneDigital\SyliusAiTranslationPlugin\Controller\Admin\Translation\ImportTemplateController
+
+cyllene_digital_sylius_ai_translation_admin_translation_import:
+    path: /translations/import
+    methods: [POST]
+    defaults:
+        _controller: CylleneDigital\SyliusAiTranslationPlugin\Controller\Admin\Translation\ImportController
+
+cyllene_digital_sylius_ai_translation_admin_translation_import_confirm:
+    path: /translations/import/confirm
+    methods: [POST]
+    defaults:
+        _controller: CylleneDigital\SyliusAiTranslationPlugin\Controller\Admin\Translation\ImportConfirmController
+
+cyllene_digital_sylius_ai_translation_admin_translation_import_cancel:
+    path: /translations/import/cancel
+    methods: [POST]
+    defaults:
+        _controller: CylleneDigital\SyliusAiTranslationPlugin\Controller\Admin\Translation\ImportCancelController
+
+# Suggestion screen.
+cyllene_digital_sylius_ai_translation_admin_suggestion_index:
+    path: /translations/suggestions
+    methods: [GET]
+    defaults:
+        _controller: CylleneDigital\SyliusAiTranslationPlugin\Controller\Admin\Suggestion\IndexController
+
+cyllene_digital_sylius_ai_translation_admin_suggestion_estimate:
+    path: /translations/suggestions/estimate
+    methods: [GET]
+    defaults:
+        _controller: CylleneDigital\SyliusAiTranslationPlugin\Controller\Admin\Suggestion\EstimateController
+
+cyllene_digital_sylius_ai_translation_admin_suggestion_generate:
+    path: /translations/suggestions/generate
+    methods: [POST]
+    defaults:
+        _controller: CylleneDigital\SyliusAiTranslationPlugin\Controller\Admin\Suggestion\GenerateController
+
+cyllene_digital_sylius_ai_translation_admin_suggestion_approve:
+    path: /translations/suggestions/{id}/approve
+    requirements:
+        id: '\d+'
+    methods: [POST]
+    defaults:
+        _controller: CylleneDigital\SyliusAiTranslationPlugin\Controller\Admin\Suggestion\ApproveController
+
+cyllene_digital_sylius_ai_translation_admin_suggestion_reject:
+    path: /translations/suggestions/{id}/reject
+    requirements:
+        id: '\d+'
+    methods: [POST, DELETE]
+    defaults:
+        _controller: CylleneDigital\SyliusAiTranslationPlugin\Controller\Admin\Suggestion\RejectController
+
+cyllene_digital_sylius_ai_translation_admin_suggestion_approve_bulk:
+    path: /translations/suggestions/approve-bulk
+    methods: [POST]
+    defaults:
+        _controller: CylleneDigital\SyliusAiTranslationPlugin\Controller\Admin\Suggestion\ApproveBulkController
+
+cyllene_digital_sylius_ai_translation_admin_suggestion_reject_bulk:
+    path: /translations/suggestions/reject-bulk
+    methods: [POST]
+    defaults:
+        _controller: CylleneDigital\SyliusAiTranslationPlugin\Controller\Admin\Suggestion\RejectBulkController

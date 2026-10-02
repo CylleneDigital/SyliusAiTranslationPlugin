@@ -1,0 +1,58 @@
+name: Security
+
+on:
+    push:
+        branches:
+            - main
+    pull_request: ~
+    schedule:
+        -
+            cron: "0 7 * * 1"
+    workflow_dispatch: ~
+
+permissions:
+    contents: read
+
+jobs:
+    audit:
+        runs-on: ubuntu-24.04
+        timeout-minutes: 15
+
+        name: "Composer audit"
+
+        steps:
+            -
+                uses: actions/checkout@v7
+
+            -
+                name: Setup PHP
+                uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2
+                with:
+                    php-version: "8.4"
+                    coverage: none
+
+            -
+                name: Install dependencies
+                run: composer update --no-interaction --no-progress --prefer-dist
+
+            # A known vulnerability in a Sylius plugin's dependency deserves to be seen on
+            # Monday morning, not at release time.
+            #
+            # `--abandoned=report` shows them without failing: since Composer 2.7, an abandoned
+            # package is enough to exit with code 1. A few are among the Sylius skeleton's
+            # development dependencies, none of our doing and none carrying a flaw. Letting them
+            # block CI would amount to leaving it permanently red, hence to no longer looking
+            # the day a real vulnerability comes out.
+            -
+                name: Audit dependencies
+                run: composer audit --ansi --abandoned=report
+
+            # The resolution above takes the newest packages (Sylius 2.3, Symfony 8). Shops also run the
+            # oldest supported line: Sylius 2.1 on PHP 8.3, hence Symfony 7.4.
+            -
+                name: Audit the Sylius 2.1 resolution
+                run: |
+                    composer config platform.php 8.3.0
+                    composer require --no-update --no-interaction "sylius/sylius:~2.1.0" "sylius/test-application:~2.1.0@alpha"
+                    composer update --no-interaction --no-progress --prefer-dist
+                    composer audit --ansi --abandoned=report

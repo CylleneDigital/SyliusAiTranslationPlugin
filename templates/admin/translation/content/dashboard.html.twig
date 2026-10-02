@@ -1,0 +1,168 @@
+{% import '@CylleneDigitalSyliusAiTranslationPlugin/admin/shared/flags.html.twig' as flags %}
+
+{% set scope_params = hookable_metadata.context.scope_params %}
+{% set overrides_by_locale = hookable_metadata.context.overrides_by_locale %}
+{% set coverage = hookable_metadata.context.coverage %}
+{% set orphan_count = hookable_metadata.context.orphan_count %}
+{% set pending_import = hookable_metadata.context.pending_import %}
+
+<div class="container-xl">
+    {% if pending_import and is_granted('cyllene_digital_sylius_ai_translation.import') %}
+        <div class="card mb-4">
+            <div class="card-status-top bg-primary"></div>
+            <div class="card-header">
+                <h3 class="card-title">
+                    {{ ux_icon('tabler:file-import') }}
+                    {{ 'cyllene_digital_sylius_ai_translation.ui.import_preview_title'|trans }}
+                </h3>
+            </div>
+            <div class="card-body">
+                <p class="mb-2">
+                    {{ 'cyllene_digital_sylius_ai_translation.ui.import_preview_summary'|trans({
+                        'imported': pending_import.importable,
+                        'skipped': pending_import.skipped,
+                        'unchanged': pending_import.unchanged,
+                        'reverted': pending_import.reverted,
+                        'file': pending_import.name,
+                    }) }}
+                </p>
+                <div>
+                    {% for locale, count in pending_import.byLocale %}
+                        <span class="badge bg-secondary-lt me-1">
+                            {{ flags.fromLocaleCode(locale) }}{{ locale }} : {{ count }}
+                        </span>
+                    {% endfor %}
+                </div>
+                {# Each entry the import will skip, where it is in the file and why (worded by the engine). #}
+                {% if pending_import.issues|length > 0 %}
+                    <div class="text-warning mt-3">
+                        {{ ux_icon('tabler:alert-triangle') }}
+                        {{ 'cyllene_digital_sylius_ai_translation.ui.import_preview_skipped_entries'|trans }}
+                    </div>
+                    <ul class="small text-secondary mb-0 mt-1">
+                        {% for issue in pending_import.issues %}
+                            <li>{{ issue }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            </div>
+            <div class="card-footer d-flex gap-2">
+                <form method="POST" action="{{ path('cyllene_digital_sylius_ai_translation_admin_translation_import_confirm') }}">
+                    <input type="hidden" name="_token" value="{{ csrf_token('cyllene_digital_sylius_ai_translation_transfer') }}">
+                    <button type="submit" class="btn btn-primary">
+                        {{ ux_icon('tabler:check') }}
+                        {{ 'cyllene_digital_sylius_ai_translation.ui.import_confirm'|trans }}
+                    </button>
+                </form>
+                <form method="POST" action="{{ path('cyllene_digital_sylius_ai_translation_admin_translation_import_cancel') }}">
+                    <input type="hidden" name="_token" value="{{ csrf_token('cyllene_digital_sylius_ai_translation_transfer') }}">
+                    <button type="submit" class="btn btn-link link-secondary">
+                        {{ 'sylius.ui.cancel'|trans }}
+                    </button>
+                </form>
+            </div>
+        </div>
+    {% endif %}
+
+    {% if coverage.locales|length > 0 %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h3 class="card-title">
+                    {{ ux_icon('tabler:chart-pie') }}
+                    {{ 'cyllene_digital_sylius_ai_translation.ui.coverage'|trans }}
+                    {# The default locale, spelled out like everywhere else (flag + [code] Name). #}
+                    <span class="badge bg-azure-lt ms-2" title="{{ 'cyllene_digital_sylius_ai_translation.ui.coverage_pivot_help'|trans }}">
+                        {{ 'cyllene_digital_sylius_ai_translation.ui.coverage_pivot'|trans }}
+                        {{ flags.label(coverage.defaultLocale, '') }}
+                    </span>
+                </h3>
+            </div>
+            <div class="card-body">
+                <div class="row row-cards">
+                    {% for locale_coverage in coverage.locales %}
+                        {% set percent = locale_coverage.percent %}
+                        {% set bar_color = locale_coverage.complete ? 'bg-success' : (percent >= 70 ? 'bg-warning' : 'bg-danger') %}
+                        <div class="col-sm-6 col-lg-3">
+                            <div class="d-flex justify-content-between mb-1">
+                                <strong>{{ flags.label(locale_coverage.locale) }}</strong>
+                                <span class="{{ locale_coverage.complete ? 'text-success' : 'text-secondary' }}">{{ percent }} %</span>
+                            </div>
+                            <div class="progress progress-sm mb-1">
+                                <div class="progress-bar {{ bar_color }}" style="width: {{ percent }}%" role="progressbar" aria-valuenow="{{ percent }}" aria-valuemin="0" aria-valuemax="100"></div>
+                            </div>
+                            <div class="text-secondary small">
+                                {% if locale_coverage.complete %}
+                                    {{ 'cyllene_digital_sylius_ai_translation.ui.coverage_complete'|trans }}
+                                {% else %}
+                                    {# The browser filtered on "this locale, untranslated only": the rows to
+                                       fill in by hand — the sparkles link keeps the AI path one click away. #}
+                                     <a
+                                         href="{{ path('cyllene_digital_sylius_ai_translation_admin_translation_index', scope_params|merge({criteria: {locale: locale_coverage.locale, missing: 'true'}})) }}"
+                                         class="text-reset cyllene-translation-dotted-link"
+                                         title="{{ 'cyllene_digital_sylius_ai_translation.ui.view_missing_help'|trans }}"
+                                     >{{ 'cyllene_digital_sylius_ai_translation.ui.coverage_missing'|trans({'count': locale_coverage.missing}) }}</a>
+                                    {% if is_granted('cyllene_digital_sylius_ai_translation.generate') %}
+                                    · <a
+                                         href="{{ path('cyllene_digital_sylius_ai_translation_admin_suggestion_index', scope_params|merge({source: coverage.defaultLocale, target: locale_coverage.locale, criteria: {locale: locale_coverage.locale}})) }}"
+                                         class="text-reset cyllene-translation-dotted-link"
+                                         title="{{ 'cyllene_digital_sylius_ai_translation.ui.generate_missing_help'|trans }}"
+                                    >{{ ux_icon('tabler:sparkles', {height: 14, width: 14}) }} {{ 'cyllene_digital_sylius_ai_translation.ui.generate_missing'|trans }}</a>
+                                    {% endif %}
+                                {% endif %}
+                            </div>
+                            {% if locale_coverage.pendingSuggestions > 0 %}
+                                {# Straight to the review list of this locale, for the channel being browsed. #}
+                                <div class="text-secondary small">
+                                     <a
+                                         href="{{ path('cyllene_digital_sylius_ai_translation_admin_suggestion_index', scope_params|merge({criteria: {locale: locale_coverage.locale}})) }}"
+                                         class="text-reset cyllene-translation-dotted-link"
+                                         title="{{ 'cyllene_digital_sylius_ai_translation.ui.review_pending_help'|trans }}"
+                                     >{{ 'cyllene_digital_sylius_ai_translation.ui.coverage_pending'|trans({'count': locale_coverage.pendingSuggestions}) }}</a>
+                                </div>
+                            {% endif %}
+                            {# The overrides this channel owns in that locale: the browser on them, one click away. #}
+                            {% set modified = overrides_by_locale[locale_coverage.locale]|default(0) %}
+                            {% if modified > 0 %}
+                                <div class="text-secondary small">
+                                     <a
+                                         href="{{ path('cyllene_digital_sylius_ai_translation_admin_translation_index', scope_params|merge({criteria: {locale: locale_coverage.locale, modified: 'true'}})) }}"
+                                         class="text-reset cyllene-translation-dotted-link"
+                                         title="{{ 'cyllene_digital_sylius_ai_translation.ui.view_modified_help'|trans }}"
+                                     >{{ 'cyllene_digital_sylius_ai_translation.ui.coverage_modified'|trans({'count': modified}) }}</a>
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    {% if orphan_count > 0 %}
+        <div class="alert alert-warning mb-4" data-test-orphan-overrides>
+            <div class="d-flex align-items-center justify-content-between w-100 gap-3">
+                <div>
+                    {{ ux_icon('tabler:ghost') }}
+                    {{ 'cyllene_digital_sylius_ai_translation.ui.orphan_overrides_notice'|trans({'count': orphan_count}) }}
+                </div>
+                {% if is_granted('cyllene_digital_sylius_ai_translation.edit') %}
+                    <form
+                        method="POST"
+                        action="{{ path('cyllene_digital_sylius_ai_translation_admin_translation_purge_orphans') }}"
+                        data-controller="ait-admin-confirm"
+                        data-ait-admin-confirm-message-value="{{ 'cyllene_digital_sylius_ai_translation.ui.purge_orphans_confirm'|trans }}"
+                        data-action="submit->ait-admin-confirm#confirm"
+                    >
+                        <input type="hidden" name="_token" value="{{ csrf_token('cyllene_digital_sylius_ai_translation_transfer') }}">
+                        <button type="submit" class="btn btn-warning btn-sm text-nowrap">
+                            {{ ux_icon('tabler:trash') }}
+                            {{ 'cyllene_digital_sylius_ai_translation.ui.purge_orphans'|trans }}
+                        </button>
+                    </form>
+                {% endif %}
+            </div>
+        </div>
+    {% endif %}
+
+
+</div>

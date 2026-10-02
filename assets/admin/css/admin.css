@@ -1,0 +1,62 @@
+/*
+ * The plugin's admin stylesheet, bundled by assets/admin/entrypoint.js with the Stimulus
+ * controllers. Every plugin-specific rule lives here: no <style> blocks in templates, and no
+ * inline styles except computed values (the coverage bars' width).
+ *
+ * The host bundles this file into its whole admin: a rule that reaches Sylius' own markup is
+ * limited to the plugin's two screens, through the class their channel filter block carries.
+ */
+
+/* Filter helps: the same grey as .text-secondary (the channel explanation).
+   NOT --tblr-secondary-color, which is 75% body colour — almost black. */
+body:has(.cyllene-translation-screen) .sylius-filters .form-text.help-text {
+    color: var(--tblr-secondary, #6c757d) !important;
+    font-size: 0.875em;
+}
+
+/* Modal textareas: Sylius' admin stylesheet forces textarea.form-control to 12rem —
+   the review/edit modals want them compact. The full compound selector is needed to
+   outweigh Sylius' own `textarea.form-control` rule. */
+textarea.form-control.cyllene-translation-textarea {
+    min-height: 0;
+    height: 4.5rem;
+}
+
+/* Grid cells: long values truncate at a readable column width — the full text lives
+   in the review/edit modal (the key cell keeps it in a tooltip). */
+.cyllene-translation-cell-truncate {
+    max-width: 240px;
+}
+
+/* The key column stacks key + catalogue: a little wider. */
+.cyllene-translation-cell-truncate-wide {
+    max-width: 280px;
+}
+
+/* The key column's code: slightly smaller than .small so long keys fit. */
+.cyllene-translation-key {
+    font-size: 0.8rem;
+}
+
+/* The coverage card's muted lines: the links keep a dotted underline so they still
+   read as links against the secondary text. */
+.cyllene-translation-dotted-link {
+    text-decoration: underline dotted;
+}
+
+/* Locale flags: the same rounded corners as the admin's country flags. */
+.cyllene-translation-flag {
+    border-radius: 2px;
+}
+
+/* The import modal's collapsible format help: the summary is the affordance. */
+.cyllene-translation-import-formats summary {
+    cursor: pointer;
+}
+
+/* Sylius' filters block (stock template) keeps 2rem under it, the plugin's cards
+   1.5rem: one vertical rhythm for the whole page. The wrapper has no class of its
+   own — it is targeted through the filters it contains. */
+body:has(.cyllene-translation-screen) .page-body .container-xl > .mb-5:has(.sylius-filters) {
+    margin-bottom: 1.5rem !important;
+}

@@ -1,0 +1,25 @@
+{#
+    The data the edit modal needs, as attributes of whatever opens it (a cell, the row
+    button). Bootstrap hands the trigger to the modal as `relatedTarget`; the modal's
+    Stimulus controller copies these attributes into its fields — see
+    assets/admin/js/edit-modal-controller.js.
+    The effective value mirrors the runtime: override, else the inherited one (the global
+    override in a channel view, the parent language's for a regional locale), else file.
+#}
+{# link: the trigger is a grid cell (an <a>), which then only leads somewhere for who may edit. #}
+{% macro attributes(row, link = false) %}
+    {% if is_granted('cyllene_digital_sylius_ai_translation.edit') %}
+    {% if link %}href="#" title="{{ 'cyllene_digital_sylius_ai_translation.ui.edit_translation_help'|trans }}"{% endif %}
+    data-bs-toggle="modal"
+    data-bs-target="#translation-edit-modal"
+    data-row-key="{{ row.key }}"
+    data-row-catalogue="{{ row.catalogue }}"
+    data-row-locale="{{ row.locale }}"
+    data-row-scope="{{ row.scope }}"
+    data-row-reference="{{ row.reference ?? '' }}"
+    data-row-reference-locale="{{ row.referenceLocale ?? '' }}"
+    data-row-original="{{ row.original ?? '' }}"
+    data-row-current="{{ row.override ?? row.inherited ?? row.original ?? '' }}"
+    data-row-has-override="{{ row.hasOverride ? '1' : '0' }}"
+    {% endif %}
+{% endmacro %}

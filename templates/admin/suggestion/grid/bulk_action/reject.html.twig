@@ -1,0 +1,28 @@
+{# Same mechanics as the bulk approve — see approve.html.twig. Rejecting deletes the rows. #}
+{% component 'sylius_admin:confirmation_modal' with {modal_id: 'suggestion-bulk-reject-modal', type: 'bulk-reject'} %}
+    {% block trigger %}
+        {% import '@SyliusAdmin/shared/helper/button.html.twig' as button %}
+        {{ button.default({
+            text: action.label|trans,
+            class: 'btn-danger',
+            icon: 'tabler:trash-x',
+            disabled: true,
+            attr: 'data-check-all-action=index data-bs-toggle=modal data-bs-target=#suggestion-bulk-reject-modal',
+        }) }}
+    {% endblock %}
+
+    {% block header %}
+        <h1 class="modal-title py-5">{{ 'cyllene_digital_sylius_ai_translation.ui.confirm_bulk_reject'|trans }}</h1>
+    {% endblock %}
+
+    {% block footer %}
+        {% import '@SyliusAdmin/shared/helper/button.html.twig' as button %}
+        <form action="{{ path('cyllene_digital_sylius_ai_translation_admin_suggestion_reject_bulk') }}" method="post" data-bulk-delete="index">
+            <input type="hidden" name="_token" value="{{ csrf_token('cyllene_digital_sylius_ai_translation_suggestion') }}">
+            {# The page's scope: the route acts only on this channel's rows. #}
+            <input type="hidden" name="scope" value="{{ action.options.scope|default('') }}">
+            {{ button.default({ text: 'sylius.ui.cancel'|trans, attr: 'data-bs-dismiss=modal' }) }}
+            {{ button.default({ text: action.label|trans, type: 'submit', class: 'btn-danger', icon: 'tabler:trash-x' }) }}
+        </form>
+    {% endblock %}
+{% endcomponent %}

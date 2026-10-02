@@ -1,0 +1,6 @@
+{% import '@CylleneDigitalSyliusAiTranslationPlugin/admin/suggestion/grid/_review_trigger.html.twig' as review %}
+{# Clicking the cell opens the review modal — the whole text is readable there. #}
+<a class="d-block text-reset text-decoration-none" {{ review.attributes(data, true) }}>
+    <div class="text-truncate cyllene-translation-cell-truncate">{{ data.sourceValue }}</div>
+    <div class="text-secondary small">{{ data.sourceLocale }}</div>
+</a>

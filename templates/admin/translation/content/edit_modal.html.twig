@@ -1,0 +1,92 @@
+{#
+    The edit modal — one for the page, filled by its Stimulus controller
+    (assets/admin/js/edit-modal-controller.js) from the trigger's data-* attributes (grid
+    cells and the row button, see grid/_edit_trigger.html.twig). Reference and original
+    texts are readable side by side whatever their length; the current value is edited by
+    hand, and "remove the override" deletes it (shown only when one exists).
+#}
+{% if is_granted('cyllene_digital_sylius_ai_translation.edit') %}
+{% set csrf = csrf_token('cyllene_digital_sylius_ai_translation_transfer') %}
+
+{# A click beside the modal does not close it: what was typed would be lost. Escape, the cross and Cancel still do. #}
+<div class="modal fade" id="translation-edit-modal" tabindex="-1" aria-hidden="true" data-controller="ait-admin-edit-modal" data-bs-backdrop="static">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <form id="translation-edit-form" method="post" action="{{ path('cyllene_digital_sylius_ai_translation_admin_translation_save') }}">
+                <input type="hidden" name="_token" value="{{ csrf }}">
+                <input type="hidden" name="key" data-ait-admin-edit-modal-target="keyInput">
+                <input type="hidden" name="catalogue" data-ait-admin-edit-modal-target="catalogueInput">
+                <input type="hidden" name="locale" data-ait-admin-edit-modal-target="localeInput">
+                <input type="hidden" name="scope" data-ait-admin-edit-modal-target="scopeInput">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        {{ ux_icon('tabler:pencil') }}
+                        {{ 'cyllene_digital_sylius_ai_translation.ui.edit_translation'|trans }}
+                        <span class="badge bg-primary text-white ms-2" data-ait-admin-edit-modal-target="localeBadge"></span>
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ 'sylius.ui.cancel'|trans }}"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3" title="{{ 'cyllene_digital_sylius_ai_translation.ui.translation_key_help'|trans }}">
+                        <code data-ait-admin-edit-modal-target="key" class="small"></code>
+                        {{ ux_icon('tabler:help-circle', {class: 'icon text-secondary', height: 16, width: 16}) }}
+                        <div class="text-secondary small" data-ait-admin-edit-modal-target="catalogue"></div>
+                    </div>
+                    <div class="mb-3" data-ait-admin-edit-modal-target="referenceBlock">
+                        <label for="translation-edit-reference" class="form-label" title="{{ 'cyllene_digital_sylius_ai_translation.ui.reference_column_help'|trans }}">
+                            {{ 'cyllene_digital_sylius_ai_translation.ui.reference_column'|trans }}
+                            <span class="badge bg-secondary-lt ms-1" data-ait-admin-edit-modal-target="referenceLocale"></span>
+                            {{ ux_icon('tabler:help-circle', {class: 'icon text-secondary', height: 16, width: 16}) }}
+                        </label>
+                        <textarea id="translation-edit-reference" data-ait-admin-edit-modal-target="reference" class="form-control cyllene-translation-textarea" rows="2" disabled></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="translation-edit-original" class="form-label" title="{{ 'cyllene_digital_sylius_ai_translation.ui.original_value_help'|trans }}">
+                            {{ 'cyllene_digital_sylius_ai_translation.ui.original_value'|trans }}
+                            <span class="badge bg-secondary-lt ms-1" data-ait-admin-edit-modal-target="originalLocale"></span>
+                            {{ ux_icon('tabler:help-circle', {class: 'icon text-secondary', height: 16, width: 16}) }}
+                        </label>
+                        <textarea id="translation-edit-original" data-ait-admin-edit-modal-target="original" class="form-control cyllene-translation-textarea" rows="2" disabled></textarea>
+                    </div>
+                    <div class="mb-1">
+                        <label for="translation-edit-value" class="form-label" title="{{ 'cyllene_digital_sylius_ai_translation.ui.current_value_help'|trans }}">
+                            {{ 'cyllene_digital_sylius_ai_translation.ui.current_value'|trans }}
+                            <span class="badge bg-secondary-lt ms-1" data-ait-admin-edit-modal-target="valueLocale"></span>
+                            {{ ux_icon('tabler:help-circle', {class: 'icon text-secondary', height: 16, width: 16}) }}
+                        </label>
+                        <textarea id="translation-edit-value" data-ait-admin-edit-modal-target="value" name="value" class="form-control cyllene-translation-textarea" rows="2"></textarea>
+                        <small class="form-hint">{{ 'cyllene_digital_sylius_ai_translation.ui.edit_translation_hint'|trans }}</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    {# Deletes the override: a second submit of the same form, pointed at the reset route. #}
+                    <button type="submit" class="btn btn-outline-warning me-auto" data-ait-admin-edit-modal-target="reset" formaction="{{ path('cyllene_digital_sylius_ai_translation_admin_translation_reset') }}">
+                        {{ ux_icon('tabler:arrow-back-up') }}
+                        {{ 'cyllene_digital_sylius_ai_translation.ui.reset_to_original'|trans }}
+                    </button>
+                    <button type="button" class="btn btn-link link-secondary" data-bs-dismiss="modal">
+                        {{ 'sylius.ui.cancel'|trans }}
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        {{ ux_icon('tabler:check') }}
+                        {{ 'cyllene_digital_sylius_ai_translation.ui.save'|trans }}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{# The column helps of the grid header, attached by assets/admin/js/header-help-controller.js. #}
+<div hidden
+     data-controller="ait-admin-header-help"
+     data-ait-admin-header-help-help-value="{{ {
+         key: 'cyllene_digital_sylius_ai_translation.ui.translation_key_help'|trans,
+         reference: 'cyllene_digital_sylius_ai_translation.ui.reference_column_help'|trans,
+         original: 'cyllene_digital_sylius_ai_translation.ui.original_value_help'|trans,
+         current: 'cyllene_digital_sylius_ai_translation.ui.current_value_help'|trans,
+         actions: 'cyllene_digital_sylius_ai_translation.ui.edit_translation_help'|trans,
+     }|json_encode }}">
+    <template data-ait-admin-header-help-target="icon">{{ ux_icon('tabler:help-circle', {class: 'icon text-secondary', height: 16, width: 16}) }}</template>
+</div>

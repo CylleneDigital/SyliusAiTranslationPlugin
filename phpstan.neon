@@ -1,0 +1,10 @@
+parameters:
+    level: max
+    paths:
+        - src
+        - tests/Unit
+        - tests/Integration
+        - tests/Functional
+        - tests/Behat
+        - tests/TestApplication/src
+        - tests/SyncsTestSchema.php

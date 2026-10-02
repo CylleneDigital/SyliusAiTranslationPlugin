@@ -1,0 +1,13 @@
+{# The channel filter of the whole page — grid, counters and generation follow it. #}
+{% set scope = hookable_metadata.context.scope %}
+
+{# cyllene-translation-screen: what admin.css recognises the plugin's screens by. #}
+<div class="container-xl cyllene-translation-screen">
+    {% include '@CylleneDigitalSyliusAiTranslationPlugin/admin/shared/scope_selector.html.twig' with {
+        scope: scope,
+        available_scopes: hookable_metadata.context.available_scopes,
+        route: 'cyllene_digital_sylius_ai_translation_admin_suggestion_index',
+        help_key: 'cyllene_digital_sylius_ai_translation.ui.scope_help_suggestions',
+    } only %}
+</div>
+

@@ -1,0 +1,15 @@
+{# The plugin's section of the channel form — same card as Sylius' own sections. #}
+<div class="g-col-12 card mb-3">
+    <div class="card-header">
+        <div class="card-title">
+            {{ ux_icon('tabler:sparkles') }}
+            {{ 'cyllene_digital_sylius_ai_translation.ui.channel_section'|trans }}
+        </div>
+    </div>
+
+    <div class="card-body">
+        <div class="row">
+            {% hook 'ai_translation' %}
+        </div>
+    </div>
+</div>

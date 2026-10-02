@@ -1,0 +1,2 @@
+{% set confidence_class = data >= 0.9 ? 'bg-success text-white' : (data >= 0.7 ? 'bg-warning text-white' : 'bg-danger text-white') %}
+<span class="badge {{ confidence_class }}">{{ (data * 100)|number_format(0) }}%</span>

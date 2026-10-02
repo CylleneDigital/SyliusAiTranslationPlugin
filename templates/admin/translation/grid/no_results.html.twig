@@ -1,0 +1,15 @@
+{% set resources = hookable_metadata.context.resources|default(null) %}
+
+{% if resources.data is defined and resources.data|length == 0 %}
+    <div class="card">
+        <div class="empty">
+            <div class="empty-icon">
+                {{ ux_icon('tabler:file-search') }}
+            </div>
+            <p class="empty-title">{{ 'cyllene_digital_sylius_ai_translation.ui.no_translations_found'|trans }}</p>
+            <p class="empty-subtitle text-secondary">
+                {{ 'cyllene_digital_sylius_ai_translation.ui.try_different_filters'|trans }}
+            </p>
+        </div>
+    </div>
+{% endif %}

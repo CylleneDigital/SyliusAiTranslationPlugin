@@ -1,0 +1,9 @@
+{% import '@CylleneDigitalSyliusAiTranslationPlugin/admin/translation/grid/_edit_trigger.html.twig' as edit %}
+{# Clicking the cell opens the edit modal — the whole text is readable there. #}
+<a class="d-block text-reset text-decoration-none" {{ edit.attributes(data, true) }}>
+    {% if data.reference is not null %}
+        <span class="text-truncate d-inline-block text-secondary cyllene-translation-cell-truncate">{{ data.reference }}</span>
+    {% else %}
+        <span class="text-secondary">—</span>
+    {% endif %}
+</a>

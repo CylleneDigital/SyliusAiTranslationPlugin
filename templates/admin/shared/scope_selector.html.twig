@@ -1,0 +1,43 @@
+{#
+    The page-level channel filter shared by the Catalogue and Suggestions screens: a GET
+    form that reloads the page on `?scope=<channel code>` ('' = the global view). Every
+    block below it is computed for that channel, the grid included: it reads the very same
+    URL parameter. Changing the channel deliberately drops the other filters — they may
+    not make sense for the new channel (its locales differ).
+
+    Variables: scope (string), available_scopes (code => name), route (index route name),
+    help_key (explanation translation key, default: the catalogue one).
+#}
+{% set help_key = help_key|default('cyllene_digital_sylius_ai_translation.ui.scope_help') %}
+{% if available_scopes|length > 0 %}
+    <div class="card mb-4" data-controller="ait-admin-scope-filter" data-ait-admin-scope-filter-scope-value="{{ scope }}">
+        <div class="card-body">
+            <form method="GET" action="{{ path(route) }}" class="row g-3 align-items-center">
+                <div class="col-auto">
+                    <label for="scope_selector" class="form-label mb-0 fw-bold">
+                        {{ ux_icon('tabler:building-store') }}
+                        {{ 'cyllene_digital_sylius_ai_translation.ui.scope'|trans }}
+                    </label>
+                </div>
+                <div class="col-auto">
+                    <select id="scope_selector" name="scope" class="form-select" data-action="ait-admin-scope-filter#submit">
+                        <option value="">{{ 'cyllene_digital_sylius_ai_translation.ui.scope_global'|trans }}</option>
+                        {% for code, label in available_scopes %}
+                            <option value="{{ code }}" {{ code == scope ? 'selected' }}>{{ label }} ({{ code }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {# The explanation fills the space right of the select — no tooltip. #}
+                <div class="col text-secondary small">
+                    {{ help_key|trans }}
+                </div>
+                <noscript>
+                    <div class="col-auto">
+                        <button type="submit" class="btn btn-primary">{{ 'sylius.ui.filter'|trans }}</button>
+                    </div>
+                </noscript>
+            </form>
+        </div>
+    </div>
+
+{% endif %}

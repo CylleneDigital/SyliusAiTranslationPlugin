@@ -1,0 +1,23 @@
+# Two providers so the CLI/BO selectors have something to show. The keys default to
+# dummies (tests/TestApplication/.env): the back office works, a generation fails cleanly.
+# A provider of your own (a private gateway, real keys) goes to config/local.yaml, which is
+# not versioned - see local.yaml.dist.
+cyllene_digital_ai_translation:
+    messenger_transport_dsn: '%env(MESSENGER_TRANSPORT_DSN)%'
+    default_provider: llm
+    coverage_cache_ttl: 0
+    # kernel.project_dir is vendor/sylius/test-application — climb back to the plugin's
+    # own fixture directory (the "host project" translations browsed by the plugin).
+    translations_path: '%kernel.project_dir%/../../../tests/TestApplication/translations'
+    additional_paths:
+        SeasonalTheme: '%kernel.project_dir%/../../../tests/TestApplication/themes/SeasonalTheme/translations'
+    providers:
+        deepl:
+            type: deepl
+            api_key: '%env(DEEPL_API_KEY)%'
+        # Any /chat/completions API: here a local Ollama, the engine's own example.
+        llm:
+            type: default
+            api_key: '%env(LLM_API_KEY)%'
+            model: llama3.2
+            base_uri: 'http://localhost:11434/v1'

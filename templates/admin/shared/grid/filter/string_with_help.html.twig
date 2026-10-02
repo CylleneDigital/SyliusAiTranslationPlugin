@@ -1,0 +1,18 @@
+{#
+    Sylius' stock string-filter template renders the value row directly, so a `help`
+    form option set on the filter's root form never shows. This variant reads the help
+    from the filter's own options (a translation key) and hands it to the value row —
+    the type select, when the type is not fixed, renders as in the stock template.
+#}
+{% form_theme form '@SyliusAdmin/shared/form_theme.html.twig' %}
+
+<div class="sylius-filters__string">
+    {% if form.type is defined %}
+        {{ form_row(form.type, {'label': filter.label}) }}
+    {% endif %}
+    {{ form_row(form.value, {
+        attr: {placeholder: form.value.vars.label},
+        label: form.type is defined ? form.value.vars.label : filter.label,
+        help: filter.options.help|default(null),
+    }) }}
+</div>

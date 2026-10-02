@@ -1,0 +1,7 @@
+{% import '@CylleneDigitalSyliusAiTranslationPlugin/admin/translation/grid/_edit_trigger.html.twig' as edit %}
+{# Opens the edit modal: full texts side by side, hand editing, removal of the override. #}
+<div data-bs-toggle="tooltip" data-bs-title="{{ action.label|trans }}">
+    <button type="button" class="btn btn-icon btn-primary" {{ edit.attributes(data) }}>
+        {{ ux_icon(action.icon|default('tabler:pencil')) }}
+    </button>
+</div>

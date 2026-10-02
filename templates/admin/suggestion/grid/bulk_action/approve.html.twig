@@ -1,0 +1,32 @@
+{#
+    Sylius' bulk mechanics: the trigger is enabled by check-all.js once a row is ticked
+    (data-check-all-action), the confirmation form gets the ticked ids appended as
+    `ids[]` by bulk-delete.js (data-bulk-delete) before it is submitted.
+#}
+{% component 'sylius_admin:confirmation_modal' with {modal_id: 'suggestion-bulk-approve-modal', type: 'bulk-approve'} %}
+    {% block trigger %}
+        {% import '@SyliusAdmin/shared/helper/button.html.twig' as button %}
+        {{ button.default({
+            text: action.label|trans,
+            class: 'btn-success',
+            icon: 'tabler:checks',
+            disabled: true,
+            attr: 'data-check-all-action=index data-bs-toggle=modal data-bs-target=#suggestion-bulk-approve-modal',
+        }) }}
+    {% endblock %}
+
+    {% block header %}
+        <h1 class="modal-title py-5">{{ 'cyllene_digital_sylius_ai_translation.ui.confirm_bulk_approve'|trans }}</h1>
+    {% endblock %}
+
+    {% block footer %}
+        {% import '@SyliusAdmin/shared/helper/button.html.twig' as button %}
+        <form action="{{ path('cyllene_digital_sylius_ai_translation_admin_suggestion_approve_bulk') }}" method="post" data-bulk-delete="index">
+            <input type="hidden" name="_token" value="{{ csrf_token('cyllene_digital_sylius_ai_translation_suggestion') }}">
+            {# The page's scope: the route acts only on this channel's rows. #}
+            <input type="hidden" name="scope" value="{{ action.options.scope|default('') }}">
+            {{ button.default({ text: 'sylius.ui.cancel'|trans, attr: 'data-bs-dismiss=modal' }) }}
+            {{ button.default({ text: action.label|trans, type: 'submit', class: 'btn-success', icon: 'tabler:checks' }) }}
+        </form>
+    {% endblock %}
+{% endcomponent %}

@@ -1,0 +1,50 @@
+{#
+    The data the review modal needs, as attributes of whatever opens it (a cell, the
+    row button). Bootstrap hands the trigger to the modal as `relatedTarget`; the modal's
+    Stimulus controller copies these attributes into its fields — see
+    assets/admin/js/review-modal-controller.js.
+    The checks and the current value are computed now (cyllene_digital_sylius_ai_translation_review),
+    as the approval would judge them.
+#}
+{# link: the trigger is a grid cell (an <a>), which then only leads somewhere for who may review. #}
+{% macro attributes(suggestion, link = false) %}
+    {% if is_granted('cyllene_digital_sylius_ai_translation.review') %}
+    {% if link %}href="#" title="{{ 'cyllene_digital_sylius_ai_translation.ui.review_suggestion_help'|trans }}"{% endif %}
+    {% import '@CylleneDigitalSyliusAiTranslationPlugin/admin/shared/inherited_from.html.twig' as inherited %}
+    {% set review = cyllene_digital_sylius_ai_translation_review(suggestion) %}
+    data-bs-toggle="modal"
+    data-bs-target="#suggestion-review-modal"
+    data-suggestion-key="{{ suggestion.key }}"
+    data-suggestion-catalogue="{{ suggestion.catalogue }}"
+    data-suggestion-source="{{ suggestion.sourceValue }}"
+    data-suggestion-source-locale="{{ suggestion.sourceLocale }}"
+    data-suggestion-locale="{{ suggestion.locale }}"
+    data-suggestion-value="{{ suggestion.suggestedValue ?? '' }}"
+    data-suggestion-current="{{ review.current ?? '' }}"
+    data-suggestion-has-current="{{ review.current is not null ? '1' : '0' }}"
+    data-suggestion-current-origin="{% if review.currentOrigin == 'override' %}{{ 'cyllene_digital_sylius_ai_translation.ui.current_origin_override'|trans }}{% elseif review.currentOrigin == 'inherited' %}{{ inherited.label(review.inheritedFrom, suggestion.locale, suggestion.scope) }}{% elseif review.currentOrigin == 'file' %}{{ 'cyllene_digital_sylius_ai_translation.ui.current_origin_file'|trans }}{% endif %}"
+    data-suggestion-error="{{ suggestion.generationError ?? '' }}"
+    data-suggestion-mismatch="{{ _self.placeholders(review.placeholders) }}"
+    data-suggestion-syntax="{{ review.syntax|map(c => ('cyllene_digital_sylius_ai_translation.ui.' ~ c)|trans)|join(' · ') }}"
+    data-suggestion-plural="{{ _self.pluralGaps(review.pluralGaps) }}"
+    data-approve-url="{{ path('cyllene_digital_sylius_ai_translation_admin_suggestion_approve', {id: suggestion.id}) }}"
+    data-reject-url="{{ path('cyllene_digital_sylius_ai_translation_admin_suggestion_reject', {id: suggestion.id}) }}"
+    {% endif %}
+{% endmacro %}
+
+{# The placeholders the value lacks and the ones it adds, as the approval refuses them. #}
+{% macro placeholders(placeholders) %}
+    {%- set parts = [] -%}
+    {%- if placeholders.missing|length > 0 -%}
+        {%- set parts = parts|merge(['cyllene_digital_sylius_ai_translation.ui.placeholders_missing'|trans({'list': placeholders.missing|join(', ')})]) -%}
+    {%- endif -%}
+    {%- if placeholders.unexpected|length > 0 -%}
+        {%- set parts = parts|merge(['cyllene_digital_sylius_ai_translation.ui.placeholders_unexpected'|trans({'list': placeholders.unexpected|join(', ')})]) -%}
+    {%- endif -%}
+    {{- parts|join(' · ') -}}
+{% endmacro %}
+
+{# The plural/selectordinal arguments lacking a category the target language needs. #}
+{% macro pluralGaps(gaps) %}
+    {{- gaps|map(gap => 'cyllene_digital_sylius_ai_translation.ui.plural_gap'|trans({'argument': gap.argument, 'kind': gap.kind, 'categories': gap.missing|join(', ')}))|join(' · ') -}}
+{% endmacro %}

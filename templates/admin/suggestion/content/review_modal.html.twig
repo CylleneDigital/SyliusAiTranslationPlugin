@@ -1,0 +1,100 @@
+{#
+    The review modal — one for the page, filled by its Stimulus controller
+    (assets/admin/js/review-modal-controller.js) from the trigger's data-* attributes
+    (grid cells and the row button, see grid/_review_trigger.html.twig). Full source,
+    current and proposed texts are readable here whatever their length; the value is
+    editable, and both decisions are one click away: approve (with the value as edited)
+    or reject.
+#}
+{% if is_granted('cyllene_digital_sylius_ai_translation.review') %}
+{% set csrf = csrf_token('cyllene_digital_sylius_ai_translation_suggestion') %}
+
+{# A click beside the modal does not close it: what was typed would be lost. Escape, the cross and Cancel still do. #}
+<div class="modal fade" id="suggestion-review-modal" tabindex="-1" aria-hidden="true" data-controller="ait-admin-review-modal" data-bs-backdrop="static">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <form id="suggestion-review-form" method="post" data-ait-admin-review-modal-target="form">
+                <input type="hidden" name="_token" value="{{ csrf }}">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        {{ ux_icon('tabler:pencil-check') }}
+                        {{ 'cyllene_digital_sylius_ai_translation.ui.review_suggestion'|trans }}
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ 'sylius.ui.cancel'|trans }}"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <code data-ait-admin-review-modal-target="key" class="small"></code>
+                        <div class="text-secondary small" data-ait-admin-review-modal-target="catalogue"></div>
+                    </div>
+                    {# The provider failure that produced an errored row, shown above the value. #}
+                    <div data-ait-admin-review-modal-target="error" class="alert alert-danger mb-3 d-none">
+                        {{ ux_icon('tabler:alert-circle') }}
+                        <div>
+                            <h4 class="alert-title">{{ 'cyllene_digital_sylius_ai_translation.ui.generation_failed'|trans }}</h4>
+                            <div class="text-secondary text-break" data-ait-admin-review-modal-target="errorMessage"></div>
+                        </div>
+                    </div>
+                    {# Compact textareas: see the plugin's admin.css (cyllene-translation-textarea). #}
+                    <div class="mb-3">
+                        <label for="suggestion-review-source" class="form-label">
+                            {{ 'cyllene_digital_sylius_ai_translation.ui.source_text'|trans }}
+                            <span class="badge bg-secondary-lt ms-1" data-ait-admin-review-modal-target="sourceLocale"></span>
+                        </label>
+                        <textarea id="suggestion-review-source" data-ait-admin-review-modal-target="source" class="form-control cyllene-translation-textarea" rows="2" disabled></textarea>
+                    </div>
+                    {# What the entry shows today (its override, an inherited value or the file):
+                       an "every key" run proposes replacements, never approved blind. #}
+                    <div class="mb-3" data-ait-admin-review-modal-target="currentBlock">
+                        <label for="suggestion-review-current" class="form-label">
+                            {{ 'cyllene_digital_sylius_ai_translation.ui.current_value'|trans }}
+                            <span class="badge bg-secondary-lt ms-1" data-ait-admin-review-modal-target="currentOrigin"></span>
+                        </label>
+                        <textarea id="suggestion-review-current" data-ait-admin-review-modal-target="current" class="form-control cyllene-translation-textarea" rows="2" disabled></textarea>
+                    </div>
+                    <div class="mb-1">
+                        <label for="suggestion-review-value" class="form-label">
+                            {{ 'cyllene_digital_sylius_ai_translation.ui.suggested_translation'|trans }}
+                            <span class="badge bg-primary text-white ms-1" data-ait-admin-review-modal-target="locale"></span>
+                        </label>
+                        <textarea id="suggestion-review-value" data-ait-admin-review-modal-target="value" data-action="input->ait-admin-review-modal#refresh" name="value" class="form-control cyllene-translation-textarea" rows="2"></textarea>
+                        <small class="form-hint">{{ 'cyllene_digital_sylius_ai_translation.ui.edit_and_approve_hint'|trans }}</small>
+                    </div>
+                    {# Follows the edited value: approving it as it stands writes no override. #}
+                    <div data-ait-admin-review-modal-target="same" class="alert alert-info mt-3 mb-0 d-none">
+                        {{ ux_icon('tabler:info-circle') }}
+                        <span>{{ 'cyllene_digital_sylius_ai_translation.ui.suggestion_same_as_current'|trans }}</span>
+                    </div>
+                    <div data-ait-admin-review-modal-target="mismatch" class="alert alert-warning mt-3 mb-0 d-none">
+                        {{ ux_icon('tabler:alert-triangle') }}
+                        <span>{{ 'cyllene_digital_sylius_ai_translation.ui.placeholder_mismatch'|trans }}: <span data-ait-admin-review-modal-target="mismatchList"></span></span>
+                    </div>
+                    <div data-ait-admin-review-modal-target="plural" class="alert alert-warning mt-3 mb-0 d-none">
+                        {{ ux_icon('tabler:alert-triangle') }}
+                        <span>{{ 'cyllene_digital_sylius_ai_translation.ui.plural_gaps_warning'|trans }} <span data-ait-admin-review-modal-target="pluralList"></span></span>
+                    </div>
+                    <div data-ait-admin-review-modal-target="syntax" class="alert alert-warning mt-3 mb-0 d-none">
+                        {{ ux_icon('tabler:alert-triangle') }}
+                        <span>{{ 'cyllene_digital_sylius_ai_translation.ui.syntax_warning'|trans }}: <span data-ait-admin-review-modal-target="syntaxList"></span></span>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    {# Rejecting deletes the suggestion: a second submit button of the same form,
+                       pointed at the reject route (the value is simply ignored there). #}
+                    <button type="submit" class="btn btn-danger me-auto" data-ait-admin-review-modal-target="reject">
+                        {{ ux_icon('tabler:trash-x') }}
+                        {{ 'cyllene_digital_sylius_ai_translation.ui.reject'|trans }}
+                    </button>
+                    <button type="button" class="btn btn-link link-secondary" data-bs-dismiss="modal">
+                        {{ 'sylius.ui.cancel'|trans }}
+                    </button>
+                    <button type="submit" class="btn btn-success" data-ait-admin-review-modal-target="approve">
+                        {{ ux_icon('tabler:check') }}
+                        {{ 'cyllene_digital_sylius_ai_translation.ui.approve'|trans }}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
