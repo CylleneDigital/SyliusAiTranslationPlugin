@@ -23,6 +23,7 @@ final readonly class Screen
     public function __construct(
         private CsrfTokenManagerInterface $csrfTokenManager,
         private UrlGeneratorInterface $urlGenerator,
+        private ChannelScopeResolver $scopeResolver,
         private string $csrfIntention,
         private string $indexRoute,
     ) {
@@ -59,6 +60,12 @@ final readonly class Screen
         if ($session instanceof FlashBagAwareSessionInterface) {
             $session->getFlashBag()->add($type, $message);
         }
+    }
+
+    /** The channel the form was posted from: a known code, or '' (the global view) for anything else. */
+    public function postedScope(Request $request): string
+    {
+        return $this->scopeResolver->resolve($request->request->getString('scope'));
     }
 
     /**

@@ -29,6 +29,15 @@ final class GridQueryTest extends TestCase
         self::assertTrue(GridQuery::isFiltering(['criteria' => ['failed' => '0']]));
     }
 
+    public function testAListNarrowedByOneFilterAloneIsToldApart(): void
+    {
+        self::assertTrue(GridQuery::isFilteringOnlyBy(['criteria' => ['locale' => 'fr_FR']], 'locale'));
+        self::assertTrue(GridQuery::isFilteringOnlyBy(['criteria' => ['locale' => 'fr_FR', 'catalogue' => '', 'search' => ['value' => '']]], 'locale'));
+        self::assertFalse(GridQuery::isFilteringOnlyBy(['criteria' => ['locale' => 'fr_FR', 'search' => ['value' => 'cart']]], 'locale'));
+        self::assertFalse(GridQuery::isFilteringOnlyBy(['criteria' => ['locale' => '', 'failed' => '0']], 'locale'));
+        self::assertFalse(GridQuery::isFilteringOnlyBy([], 'locale'));
+    }
+
     public function testOnlyTheNamedEntriesOfTheSortingHoldingAStringAreKept(): void
     {
         self::assertSame([], GridQuery::sorting([]));

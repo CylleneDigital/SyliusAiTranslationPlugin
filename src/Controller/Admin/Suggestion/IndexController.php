@@ -69,6 +69,8 @@ final readonly class IndexController
             // locale when a channel is browsed, else the coverage default locale.
             'source_locale_default' => $this->scopeResolver->getReferenceLocale($scope),
             'filtered' => GridQuery::isFiltering($request->query->all()),
+            // Where a generation lands, and what "nothing for this language" looks like.
+            'filtered_by_locale_only' => GridQuery::isFilteringOnlyBy($request->query->all(), 'locale'),
             // Generation is asynchronous: its outcome, failures included, is read from the journal.
             'generation_logs' => $this->doctrine->getRepository(GenerationLog::class)->findBy(['scope' => $scope], ['id' => 'DESC'], self::JOURNAL_LENGTH),
         ]));

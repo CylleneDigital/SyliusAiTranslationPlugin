@@ -9,9 +9,9 @@ use CylleneDigital\SyliusAiTranslationPlugin\Controller\Admin\Input\OverrideRow;
 use CylleneDigital\SyliusAiTranslationPlugin\Scope\ChannelScopeResolver;
 
 /**
- * The channel a posted row writes to, once the row is checked: a key, a catalogue, a known
- * locale and a known channel (or global). An unknown channel is refused rather than
- * silently downgraded to a global write.
+ * The channel a posted row acts on, once the row is checked: a key, a catalogue, a locale and a
+ * known channel (or global) - and, to write, a locale that channel exposes. An unknown channel
+ * is refused rather than silently downgraded to a global write.
  */
 final readonly class RowScopeResolver
 {
@@ -24,7 +24,7 @@ final readonly class RowScopeResolver
     /** @return string|null the channel code ('' = global), null when the row cannot be written */
     public function resolve(OverrideRow $row): ?string
     {
-        $scope = $this->resolveForRemoval($row);
+        $scope = $this->resolveEntry($row);
 
         if (null === $scope) {
             return null;
@@ -44,6 +44,11 @@ final readonly class RowScopeResolver
      * @return string|null the channel code ('' = global), null when the row names no entry
      */
     public function resolveForRemoval(OverrideRow $row): ?string
+    {
+        return $this->resolveEntry($row);
+    }
+
+    private function resolveEntry(OverrideRow $row): ?string
     {
         $scope = $this->scopeResolver->resolveOrNull($row->scope);
 

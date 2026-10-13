@@ -8,8 +8,9 @@
             </div>
             <p class="empty-title">{{ 'cyllene_digital_sylius_ai_translation.ui.no_pending_suggestions'|trans }}</p>
             <p class="empty-subtitle text-secondary">
-                {# Only a filter that narrows the list is worth adjusting: the form sent with every field on "All" is not. #}
-                {% if hookable_metadata.context.filtered|default(false) %}
+                {# Only a filter that narrows the list is worth adjusting: the form sent with every field on "All" is not,
+                   nor is the language alone - nothing waits for that language, which a generation answers. #}
+                {% if hookable_metadata.context.filtered|default(false) and not hookable_metadata.context.filtered_by_locale_only|default(false) %}
                     {{ 'sylius.ui.no_results_adjust_your_search'|trans }}
                 {# The generation form is above only for who may generate, and when a provider is configured. #}
                 {% elseif is_granted('cyllene_digital_sylius_ai_translation.generate') and hookable_metadata.context.available_providers|default([]) is not empty %}

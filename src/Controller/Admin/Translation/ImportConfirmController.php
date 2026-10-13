@@ -33,7 +33,7 @@ final readonly class ImportConfirmController
         if (null === $staged) {
             $this->screen->flash($request, 'error', 'cyllene_digital_sylius_ai_translation.ui.import_preview_expired');
 
-            return $this->screen->redirectBack($request, '');
+            return $this->screen->redirectBack($request, $this->screen->postedScope($request));
         }
 
         try {
@@ -41,7 +41,7 @@ final readonly class ImportConfirmController
         } catch (\InvalidArgumentException) {
             $this->screen->flash($request, 'error', 'cyllene_digital_sylius_ai_translation.ui.import_invalid_file');
 
-            return $this->screen->redirectBack($request, '');
+            return $this->screen->redirectBack($request, $this->screen->postedScope($request));
         }
 
         $this->screen->flash($request, 'success', [
@@ -59,6 +59,6 @@ final readonly class ImportConfirmController
             ]);
         }
 
-        return $this->screen->redirectBack($request, '');
+        return $this->screen->redirectBack($request, $this->screen->postedScope($request));
     }
 }

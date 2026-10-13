@@ -473,6 +473,44 @@ final class AdminActionsTest extends WebTestCase
         self::assertResponseRedirects('/admin/translations');
     }
 
+    public function testAnActionWithoutARefererReturnsToTheChannelItsFormPosted(): void
+    {
+        /** @var EntityManagerInterface $entityManager */
+        $entityManager = self::getContainer()->get(EntityManagerInterface::class);
+        $this->createTestChannel($entityManager);
+
+        // The forms of the catalogue screen carry the channel being browsed.
+        $crawler = $this->client->request('GET', '/admin/translations', ['scope' => self::BULK_TEST_CHANNEL]);
+        self::assertSame(self::BULK_TEST_CHANNEL, $crawler->filter('#import-overrides-modal input[name="scope"]')->attr('value'));
+
+        $token = $this->transferToken();
+
+        foreach (['purge-orphans', 'import', 'import/confirm', 'import/cancel'] as $action) {
+            $this->client->request('POST', '/admin/translations/' . $action, ['_token' => $token, 'scope' => self::BULK_TEST_CHANNEL], [], ['HTTP_REFERER' => '']);
+            self::assertResponseRedirects('/admin/translations?scope=' . self::BULK_TEST_CHANNEL, null, $action);
+        }
+
+        // A channel that does not exist is the global view, not a broken address.
+        $this->client->request('POST', '/admin/translations/purge-orphans', ['_token' => $token, 'scope' => 'NOPE'], [], ['HTTP_REFERER' => '']);
+        self::assertResponseRedirects('/admin/translations');
+    }
+
+    public function testResettingARowWithoutAnOverrideDoesNotClaimADeletion(): void
+    {
+        $row = ['_token' => $this->transferToken(), 'key' => 'app.welcome', 'catalogue' => 'messages', 'locale' => 'fr_FR', 'scope' => ''];
+
+        $this->client->request('POST', '/admin/translations/reset', $row);
+        self::assertResponseRedirects();
+        $this->client->followRedirect();
+        self::assertSelectorTextContains('.alert-info', 'Nothing to delete');
+
+        $this->client->request('POST', '/admin/translations/save', $row + ['value' => 'Bienvenue']);
+        $this->client->followRedirect();
+        $this->client->request('POST', '/admin/translations/reset', $row);
+        $this->client->followRedirect();
+        self::assertSelectorTextContains('.alert-success', 'Override deleted');
+    }
+
     public function testTheBulkActionsActOnTheSelectedPendingSuggestionsOnly(): void
     {
         /** @var EntityManagerInterface $entityManager */

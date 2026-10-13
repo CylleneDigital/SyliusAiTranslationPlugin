@@ -35,6 +35,13 @@ final readonly class ResetController
             return $this->screen->redirectBack($request, '');
         }
 
+        // A page left open may ask for an override already removed: nothing was deleted then.
+        if (!$this->translationManager->hasOverride($row->key, $row->catalogue, $row->locale, $scope)) {
+            $this->screen->flash($request, 'info', 'cyllene_digital_sylius_ai_translation.ui.translation_reset_nothing');
+
+            return $this->screen->redirectBack($request, $scope);
+        }
+
         $this->translationManager->removeOverride($row->key, $row->catalogue, $row->locale, $scope);
         $this->screen->flash($request, 'success', 'cyllene_digital_sylius_ai_translation.ui.translation_reset');
 

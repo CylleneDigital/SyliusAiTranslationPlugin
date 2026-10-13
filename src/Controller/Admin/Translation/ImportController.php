@@ -56,7 +56,7 @@ final readonly class ImportController
             $this->stager->clear($request);
             $this->screen->flash($request, 'error', $rejected);
 
-            return $this->screen->redirectBack($request, '');
+            return $this->screen->redirectBack($request, $this->screen->postedScope($request));
         }
 
         $this->screen->validateCsrf($request);
@@ -68,7 +68,7 @@ final readonly class ImportController
         if (null === $file) {
             $this->screen->flash($request, 'error', 'cyllene_digital_sylius_ai_translation.ui.import_file_missing');
 
-            return $this->screen->redirectBack($request, '');
+            return $this->screen->redirectBack($request, $this->screen->postedScope($request));
         }
 
         // A file PHP itself turned down was not forgotten - and each reason has its remedy: a
@@ -80,7 +80,7 @@ final readonly class ImportController
                 default => 'cyllene_digital_sylius_ai_translation.ui.import_upload_server_error',
             });
 
-            return $this->screen->redirectBack($request, '');
+            return $this->screen->redirectBack($request, $this->screen->postedScope($request));
         }
 
         // Server-side size cap + extension/media-type check BEFORE the whole file is read
@@ -95,7 +95,7 @@ final readonly class ImportController
         if (\count($violations) > 0) {
             $this->screen->flash($request, 'error', $rejected);
 
-            return $this->screen->redirectBack($request, '');
+            return $this->screen->redirectBack($request, $this->screen->postedScope($request));
         }
 
         // Nothing is written yet: the stager parks the content in the import staging cache pool and
@@ -115,6 +115,6 @@ final readonly class ImportController
             }
         }
 
-        return $this->screen->redirectBack($request, '');
+        return $this->screen->redirectBack($request, $this->screen->postedScope($request));
     }
 }

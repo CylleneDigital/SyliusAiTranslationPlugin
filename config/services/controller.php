@@ -33,6 +33,7 @@ return static function (ContainerConfigurator $container): void {
         ->args([
             service('security.csrf.token_manager'),
             service('router'),
+            service('cyllene_digital_sylius_ai_translation.scope.channel_resolver'),
             'cyllene_digital_sylius_ai_translation_transfer',
             'cyllene_digital_sylius_ai_translation_admin_translation_index',
         ]);
@@ -41,6 +42,7 @@ return static function (ContainerConfigurator $container): void {
         ->args([
             service('security.csrf.token_manager'),
             service('router'),
+            service('cyllene_digital_sylius_ai_translation.scope.channel_resolver'),
             'cyllene_digital_sylius_ai_translation_suggestion',
             'cyllene_digital_sylius_ai_translation_admin_suggestion_index',
         ]);

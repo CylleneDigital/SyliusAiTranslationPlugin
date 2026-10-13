@@ -261,6 +261,18 @@ final class AdminScreensTest extends WebTestCase
         }
     }
 
+    public function testAnEmptyListFilteredOnALanguageAloneOffersTheGeneration(): void
+    {
+        // Where a generation lands, before its suggestions arrive.
+        $crawler = $this->client->request('GET', '/admin/translations/suggestions', ['criteria' => ['locale' => 'fr_FR']]);
+        self::assertResponseIsSuccessful();
+        self::assertStringContainsString('Use the form above', $crawler->filter('.empty-subtitle')->text());
+
+        $crawler = $this->client->request('GET', '/admin/translations/suggestions', ['criteria' => ['locale' => 'fr_FR', 'search' => ['value' => 'nothing-like-this']]]);
+        self::assertResponseIsSuccessful();
+        self::assertStringNotContainsString('Use the form above', $crawler->filter('.empty-subtitle')->text());
+    }
+
     public function testAFilterSetOnAValueCanBeSetBackOnAll(): void
     {
         // The first option of a select filter is its "everything" choice: once another one is

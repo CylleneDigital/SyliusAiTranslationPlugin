@@ -36,6 +36,7 @@ cyllene_digital_sylius_ai_translation:
         translation_saved_placeholder_warning: "Traduction enregistrée — attention, placeholders modifiés par rapport à la valeur précédente : {placeholders}."
         suggestion_syntax_invalid: "Approbation refusée — {issues}."
         translation_reset: "Override supprimé — l'entrée affiche de nouveau la valeur héritée, ou celle du fichier."
+        translation_reset_nothing: "Rien à supprimer — cette entrée n'a plus d'override."
         translation_cleared: "Override supprimé — l'entrée n'a plus de traduction."
         translation_save_invalid: "Enregistrement refusé — cette entrée ne peut pas être enregistrée (locale ou canal inconnu, ou identifiant trop long), rechargez la page."
         translation_key_too_long: "Enregistrement refusé — cette clé dépasse les {max} caractères qu'un override peut stocker."

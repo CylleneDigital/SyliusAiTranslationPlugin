@@ -49,7 +49,7 @@ Each hookable reads the page's data from `hookable_metadata.context`: `scope`,
 `overrides_by_locale`, `orphan_count`, `pending_import`, `pending_suggestion_count`,
 `export_formats`, `import_max_megabytes` on the catalogue; `available_providers`, `default_provider`, `available_catalogues`,
 `catalogue_groups`, `available_locales`, `source_locale_default`, `pending_count`, `filtered`,
-`generation_logs` on the suggestions.
+`filtered_by_locale_only`, `generation_logs` on the suggestions.
 
 ## Grids
 

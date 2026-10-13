@@ -28,6 +28,6 @@ final readonly class ImportCancelController
         $this->stager->clear($request);
         $this->screen->flash($request, 'success', 'cyllene_digital_sylius_ai_translation.ui.import_cancelled');
 
-        return $this->screen->redirectBack($request, '');
+        return $this->screen->redirectBack($request, $this->screen->postedScope($request));
     }
 }

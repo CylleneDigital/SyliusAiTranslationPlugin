@@ -30,6 +30,6 @@ final readonly class PurgeOrphansController
             'parameters' => ['count' => $this->translationManager->purgeOrphanOverrides()],
         ]);
 
-        return $this->screen->redirectBack($request, '');
+        return $this->screen->redirectBack($request, $this->screen->postedScope($request));
     }
 }
