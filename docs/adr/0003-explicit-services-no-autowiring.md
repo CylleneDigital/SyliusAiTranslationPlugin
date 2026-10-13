@@ -10,18 +10,18 @@ services must not depend on what the host application happens to alias or tag.
 
 ## Decision
 
-One file per area in `config/services/`, every id prefixed with
-`cyllene_digital_sylius_ai_translation.`, every argument and tag written out. The controllers keep
-their class as id, since the routes name them that way.
+Every service is declared by hand, one file per area, with a prefixed id and every argument and
+tag written out. The controllers are the exception to the prefix: they keep their class as id,
+since the routes name them that way.
 
 ## Consequences
 
 - A new constructor argument is added to the service definition.
-- Tags are added by hand: `kernel.reset` for a class implementing `ResetInterface`,
-  `kernel.event_listener`, `twig.extension`, `form.type_extension`, `sylius.grid`,
-  `sylius.grid_data_provider`.
-- `#[Autowire]`, `#[AsEventListener]` and `#[AsDecorator]` do nothing in `src/` and are not used.
-  `#[AsGrid]` stays: `AbstractGrid` reads it itself.
+- A tag autoconfiguration would have set is added by hand.
+- The attributes that only autoconfiguration reads (`#[Autowire]`, `#[AsEventListener]`,
+  `#[AsDecorator]`) do nothing here and are not used. `#[AsGrid]` stays: the grid class reads it
+  itself.
+- A controller registered under a prefixed id would no longer be found by its route.
 
 ## Related
 

@@ -6,18 +6,20 @@
 ## Context
 
 The engine aliases its host-facing interfaces (locales, author, scopes) to its own defaults. The
-plugin provides the Sylius implementations, and must win whatever the host's configuration.
+plugin provides the Sylius implementations, and must win over those defaults deterministically.
 
 ## Decision
 
-`config/services/bridge.php` re-declares those aliases as plain aliases, not with `#[AsAlias]`.
+The plugin re-declares those aliases as plain aliases in its service configuration, not with
+`#[AsAlias]`.
 
 ## Consequences
 
 - The engine bundle is registered before the plugin: the plugin, loaded after it, overrides the
-  aliases deterministically.
-- A host that wants its own implementation re-aliases the interface after the plugin, or decorates
-  the plugin's service.
+  engine's aliases deterministically.
+- The host keeps the last word: its own configuration is read after every bundle, so re-aliasing
+  an interface there replaces the plugin's implementation. The public contract lists these
+  services as replaceable.
 
 ## Related
 

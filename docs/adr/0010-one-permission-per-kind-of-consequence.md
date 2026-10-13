@@ -10,15 +10,14 @@ billed generation do not carry the same risk: a project wants to grant them sepa
 
 ## Decision
 
-`Security/Permission` has one case per kind of consequence - view, edit, import, review,
-generate - each granted by its own role, and all of them by `ROLE_AI_TRANSLATION_MANAGE`
-(`Security/PermissionVoter`). Every permission lets its holder read.
+One permission per kind of consequence - view, edit, import, review, generate - each granted by
+its own role, and all of them by one managing role. Every permission lets its holder read.
 
 ## Consequences
 
 - A controller takes the permission of what it does.
-- What the admin may not do is not rendered either: grids, menu and templates ask
-  `is_granted('cyllene_digital_sylius_ai_translation.<permission>')`.
+- What the admin may not do is not rendered either: grids, menu and templates ask for the same
+  permission the server checks.
 - The roles are part of the public surface.
 
 ## Related

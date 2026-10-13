@@ -10,17 +10,17 @@ internal and may change in a minor version, which the plugin accepts with `^1.0`
 
 ## Decision
 
-The plugin only uses what that page names, method by method. `tests/Unit/EngineContractTest.php`
-lists every engine import of `src/` and fails on a new one and on a stale one.
+The plugin only uses what that page names, method by method. A unit test lists every engine symbol
+the plugin's code and configuration import, and fails on a new one and on a stale one.
 
 ## Consequences
 
-- The objects the engine's services return, read without an import, are in `RETURNED_AND_READ`
+- The objects the engine's services return, read without an import, are listed in the same test
   and checked by reflection.
-- One container parameter of the engine is read too,
-  `cyllene_digital_ai_translation.default_provider`: the container fails to compile if it goes.
+- One container parameter of the engine is read too, the default provider the generation form
+  presets: the container fails to compile if it goes.
 - No test builds an engine service by hand, its constructors not being contract: a test takes the
-  engine from the container, or stubs `TranslationManagerInterface`.
+  engine from the container, or stubs its manager interface.
 
 ## Related
 

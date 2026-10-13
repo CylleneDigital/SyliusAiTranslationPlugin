@@ -6,7 +6,7 @@
 ## Context
 
 Overrides, suggestions and journal rows carry the code of the channel they belong to. When a
-channel is deleted, the plugin removes its prompt context (`ChannelDeletionListener`). The engine's
+channel is deleted, the plugin removes its prompt context. The engine's
 public contract has no removal of the rest by scope.
 
 ## Decision

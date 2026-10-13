@@ -117,39 +117,55 @@ CI create the schema from the mapping (`database_setup: schema`), so only the My
 
 ## Invariants not to break
 
-The rule is here, its reasons and what follows from it in the decision record it links
-([`docs/adr/`](docs/adr/README.md)): read the record before changing one, and write a new record
-rather than editing an accepted one.
+Each rule is here in full, with the names the code uses; its reasons are in the decision record it
+links ([`docs/adr/`](docs/adr/README.md)). Read the record before changing a rule, and write a new
+record rather than editing an accepted one - the records hold no path nor figure, this file does.
 
 - **Generation runs go through `cyllene_digital_ai_translation.bus`, never `sylius.command_bus`**
-  ([0001](docs/adr/0001-generation-runs-on-the-engine-bus.md)).
-- **One prefix for everything the plugin names**: `cyllene_digital_sylius_ai_translation`. The
-  configuration key and the generation bus keep the engine's `cyllene_digital_ai_translation`;
+  ([0001](docs/adr/0001-generation-runs-on-a-dedicated-bus.md)).
+- **One prefix for everything the plugin names**: `cyllene_digital_sylius_ai_translation` - service
+  ids, routes, Twig hooks, grids, translation keys, menu entries, permission attributes, CSRF
+  intentions. `cyllene_digital_ai_translation` is the engine's: its configuration key, and the
+  generation bus the plugin declares for it (`cyllene_digital_ai_translation.bus`);
   `cyllene_ai_translation` is the engine's Messenger transport
   ([0002](docs/adr/0002-one-prefix-for-everything-the-plugin-names.md)).
-- **Services are explicit**, one file per area in `config/services/`, no autowiring nor
-  autoconfiguration: a new constructor argument is added to its definition, and the tags
-  (`kernel.reset`, `kernel.event_listener`, `twig.extension`, `form.type_extension`, `sylius.grid`,
-  `sylius.grid_data_provider`) by hand. No `#[Autowire]`, `#[AsEventListener]` or `#[AsDecorator]`
-  in `src/`; `#[AsGrid]` stays ([0003](docs/adr/0003-explicit-services-no-autowiring.md)).
+- **Services are explicit**: one file per area in `config/services/`, ids prefixed with
+  `cyllene_digital_sylius_ai_translation.` - **except the controllers, which keep their class as
+  id**: the routes name them that way, and a controller under a prefixed id is not found. No
+  autowiring nor autoconfiguration: a new constructor argument is added to its definition, a class
+  implementing `ResetInterface` needs the `kernel.reset` tag by hand, and so do
+  `kernel.event_listener`, `twig.extension`, `form.type_extension`, `sylius.grid` and
+  `sylius.grid_data_provider`. No `#[Autowire]`, `#[AsEventListener]` or `#[AsDecorator]` in
+  `src/`: they would do nothing. `#[AsGrid]` stays, `AbstractGrid` reads it itself
+  ([0003](docs/adr/0003-explicit-services-no-autowiring.md)).
 - **A `Bundle` with `SyliusPluginTrait` and a classic `Extension`**, not `AbstractBundle`
   ([0004](docs/adr/0004-bundle-class-with-sylius-plugin-trait.md)).
 - **One invokable controller per route**: a new action is a new controller class
   ([0005](docs/adr/0005-one-invokable-controller-per-route.md)).
-- **Controller routes stay in `config/routes/admin.yaml`**, not in attributes, and the input
-  objects of `Controller/Admin/Input/` carry no validation constraint
+- **Controller routes stay in `config/routes/admin.yaml`**, not in attributes. Their input comes
+  through `#[MapQueryString]`, `#[MapRequestPayload]` (`Controller/Admin/Input/`) and
+  `#[MapEntity]`; those objects carry no validation constraint on purpose - a well-typed value the
+  plugin refuses answers with a flash and a redirect (the estimate, which the generation form's
+  JavaScript calls, with a 422 and its message in JSON). A value of the wrong type (`key[]=x`,
+  `all=maybe`), which only a hand-built request sends, gets Symfony's own answer: 422 for a
+  payload, 404 for a query string
   ([0006](docs/adr/0006-routes-in-yaml-inputs-without-constraints.md)).
-- **CSRF is checked by `Screen::validateCsrf()`, not `#[IsCsrfTokenValid]`**; one request is
-  answered before that check on purpose, the import PHP emptied for its size
+- **CSRF is checked by `Screen::validateCsrf()`, not `#[IsCsrfTokenValid]`**. Two controllers do
+  it differently, on purpose: `RejectController` also accepts the per-row token of Sylius' grid
+  delete modal (requiring the screen's one there answers 403 to a rejection from the grid), and
+  `ImportController` answers an import PHP emptied for its size before the check
   ([0007](docs/adr/0007-csrf-checked-by-screen.md)).
-- **The engine interfaces are re-aliased with plain aliases** in `config/services/bridge.php`, and
-  the engine bundle is registered **before** the plugin
+- **The engine interfaces are re-aliased with plain aliases** in `config/services/bridge.php`, not
+  `#[AsAlias]`, and the engine bundle is registered **before** the plugin
   ([0008](docs/adr/0008-engine-interfaces-re-aliased-with-plain-aliases.md)).
 - **The menu entry is added at priority `-1024`**
   ([0009](docs/adr/0009-menu-entry-at-priority-minus-1024.md)).
-- **One permission per kind of consequence** (`Security/Permission`): a controller takes the
-  permission of what it does (`#[IsGranted(Permission::X->value)]`), and what the admin may not do
-  is not rendered either (`is_granted('cyllene_digital_sylius_ai_translation.<permission>')`)
+- **One permission per kind of consequence** (`Security/Permission`): view, edit, import, review,
+  generate, each granted by its own role and all of them by `ROLE_AI_TRANSLATION_MANAGE`
+  (`Security/PermissionVoter`). A controller takes the permission of what it does
+  (`#[IsGranted(Permission::X->value)]`); **every permission lets its holder read**. What the
+  admin may not do is not rendered either: grids, menu and templates ask
+  `is_granted('cyllene_digital_sylius_ai_translation.<permission>')`
   ([0010](docs/adr/0010-one-permission-per-kind-of-consequence.md)).
 - **An open Sylius modal is not where its template put it**: the confirmation modal component is
   moved out of its parent when shown, so a Stimulus controller on an ancestor reaches neither its
@@ -157,16 +173,23 @@ rather than editing an accepted one.
   as the `submitter` of the form instead (`data-generation-confirmed`). The edit and review
   modals carry their controller on the modal element itself.
 - **No script in the templates**: no `<script>`, no `on*=` attribute. A behaviour is a Stimulus
-  controller registered in `assets/admin/entrypoint.js`; the modals are filled from the `data-*`
-  attributes of their trigger, through Bootstrap's `show.bs.modal` listened to in `connect()`
-  ([0011](docs/adr/0011-no-script-in-templates.md)).
-- **No file is ever written, nothing AI-generated is applied without a human**
+  controller registered in `assets/admin/entrypoint.js` (`tests/Unit/AdminAssetsTest.php` checks
+  both, the suite having no browser). The modals are filled from the `data-*` attributes of
+  their trigger, through Bootstrap's `show.bs.modal` - listened to in `connect()`, since the
+  event name has dots ([0011](docs/adr/0011-no-script-in-templates.md)).
+- **No file is ever written, nothing AI-generated is applied without a human**: overrides are
+  database deltas, and a suggestion only becomes one through an explicit approval
   ([0012](docs/adr/0012-nothing-written-to-files-nothing-applied-without-a-human.md)).
-- **Every engine import is listed** in `tests/Unit/EngineContractTest.php`, and only what the
-  engine's `docs/public-contract.md` names is used, method by method. **No test builds an engine
-  service by hand**: it takes the engine from the container (`tests/Integration/`,
-  `tests/Functional/`, with the `SyncsTestSchema` trait) or stubs `TranslationManagerInterface`
+- **Every engine import is listed** in `tests/Unit/EngineContractTest.php`, which reads `src/` and
+  `config/`; the test fails on a new one and on a stale one. Only use what the engine's
+  `docs/public-contract.md` names, method by method. The objects its services return, read
+  without an import, go in `RETURNED_AND_READ`, checked by reflection. One container parameter of
+  the engine is read too, `cyllene_digital_ai_translation.default_provider` (the provider the
+  generation form presets): the container fails to compile if it goes
   ([0013](docs/adr/0013-only-the-engine-public-contract.md)).
+- **No test builds an engine service by hand**: its constructors are not contract. A test that
+  needs the real engine takes it from the container (`tests/Integration/`, `tests/Functional/`,
+  with the `SyncsTestSchema` trait); one that does not stubs `TranslationManagerInterface`.
 - **No server-side lock on a generation in the plugin**: the guard against double billing is the
   engine's ([0022](docs/adr/0022-double-billing-guard-is-the-engine.md)).
 - The public surface - the bundle class and its namespace, the admin routes, the Twig hooks and

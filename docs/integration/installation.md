@@ -102,7 +102,7 @@ The plugin dispatches the runs on its own bus (`cyllene_digital_ai_translation.b
 `sylius.command_bus`: that one wraps handlers in `doctrine_transaction`, and a failing chunk
 would roll back the suggestions already billed. If you dispatch `GenerateSuggestionsMessage`
 yourself, use that bus too
-([decision record](../adr/0001-generation-runs-on-the-engine-bus.md)).
+([decision record](../adr/0001-generation-runs-on-a-dedicated-bus.md)).
 
 ## Behind a load balancer
 

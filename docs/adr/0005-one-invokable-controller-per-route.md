@@ -10,16 +10,15 @@ on a generation - and its own permission.
 
 ## Decision
 
-Each route has its own invokable controller class, under `src/Controller/Admin/Translation/` and
-`src/Controller/Admin/Suggestion/`. What the actions of a screen share - the CSRF intention, the
-flashes, the way back to the list - is the `Screen` service, one instance per screen.
+Each route has its own invokable controller class. What the actions of a screen share - the CSRF
+intention, the flashes, the way back to the list - is one service, `Screen`, with one instance per
+screen.
 
 ## Consequences
 
-- A new action is a new controller class, with the permission of what it does on the class
-  (`#[IsGranted(Permission::X->value)]`).
-- A controller only words the outcome of a rule that lives in a service (`ManualOverrideEditor`,
-  the engine).
+- A new action is a new controller class, with the permission of what it does on the class.
+- A controller only words the outcome of a rule that lives in a service of the plugin or in the
+  engine.
 
 ## Related
 

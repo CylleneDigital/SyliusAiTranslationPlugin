@@ -10,13 +10,12 @@ Content Security Policy, and no test level of the plugin would see them without 
 
 ## Decision
 
-A behaviour is a Stimulus controller under `assets/admin/js/`, registered as `ait-admin-*` on the
-plugin's own Stimulus application in `assets/admin/entrypoint.js`. Templates hold no `<script>` and
-no `on*=` attribute.
+A behaviour is a Stimulus controller, registered on the plugin's own Stimulus application by the
+entrypoint a host imports. Templates hold no `<script>` and no `on*=` attribute.
 
 ## Consequences
 
-- `tests/Unit/AdminAssetsTest.php` checks both rules, the PHPUnit suite having no browser.
-- The modals are filled from the `data-*` attributes of their trigger, through Bootstrap's
-  `show.bs.modal`, listened to in `connect()` since the event name has dots.
-- A change under `assets/` comes with a `@javascript` Behat scenario.
+- A unit test checks both rules, the PHPUnit suite having no browser.
+- The modals are filled from the `data-*` attributes of their trigger, when Bootstrap shows them.
+- A change of behaviour comes with a `@javascript` Behat scenario, the only level that runs the
+  controllers.

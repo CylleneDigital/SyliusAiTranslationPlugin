@@ -10,14 +10,12 @@ plugin uses `SyliusPluginTrait`, which redefines `getContainerExtension()`.
 
 ## Decision
 
-The bundle is a plain `Bundle` with `SyliusPluginTrait` and a classic `Extension` class
-(`src/DependencyInjection/CylleneDigitalSyliusAiTranslationExtension.php`).
+The bundle is a plain `Bundle` with `SyliusPluginTrait` and a classic `Extension` class, like the
+other Sylius plugins.
 
 ## Consequences
 
-- The extension loads `config/services.php` and prepends what the plugin configures in other
-  bundles: the Twig hooks, the grid action templates, the generation bus, the import staging cache
-  pool and the theme translation roots.
+- The extension loads the services and prepends what the plugin configures in other bundles.
 - The bundle class and its namespace are part of the public surface.
 
 ## Related

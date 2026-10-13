@@ -15,7 +15,8 @@ pending suggestions, and a suggestion only becomes an override through an explic
 
 ## Consequences
 
-- Removing an override gives the file value back.
+- Removing an override gives back what the entry shows without it: the value it inherits - the
+  global override in a channel, the parent language's for a regional locale - else the file value.
 - There is no "apply everything" without review: a bulk approval acts on the suggestions an admin
   selected.
 - The storefront never shows a pending or rejected suggestion.

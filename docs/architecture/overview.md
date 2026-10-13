@@ -17,7 +17,7 @@ key are the engine's.
 |---|---|
 | Screens | Sylius index pages built from Twig hooks, their lists as Sylius grids configured in PHP |
 | Front end | One Webpack Encore entrypoint the host imports: a stylesheet and Stimulus controllers, [no script in the templates](../adr/0011-no-script-in-templates.md) |
-| Asynchronous work | The engine's Messenger message, dispatched on [a dedicated bus](../adr/0001-generation-runs-on-the-engine-bus.md) |
+| Asynchronous work | The engine's Messenger message, dispatched on [a dedicated bus](../adr/0001-generation-runs-on-a-dedicated-bus.md) |
 | Services | Defined explicitly, one file per area in `config/services/`, [without autowiring](../adr/0003-explicit-services-no-autowiring.md) |
 | Security | The admin firewall, plus [one permission per kind of action](../adr/0010-one-permission-per-kind-of-consequence.md), granted by a voter from roles |
 
@@ -66,11 +66,17 @@ key are the engine's.
 1. `Suggestion\EstimateController` answers the volume and the cost of the form's coordinates,
    without calling the provider.
 2. `Suggestion\GenerateController` validates the same coordinates and dispatches one
-   `GenerateSuggestionsMessage` per catalogue on `cyllene_digital_ai_translation.bus`.
+   `GenerateSuggestionsMessage` per catalogue on `cyllene_digital_ai_translation.bus`. The form's
+   button locks for 60 seconds in the browser (`assets/admin/js/generation-controller.js`); the
+   server queues whatever it receives, the engine guarding the bill
+   ([why](../adr/0022-double-billing-guard-is-the-engine.md)).
 3. A worker runs the engine's handler: pending suggestions appear in the grid, and each run in the
-   journal under it, failures included.
+   journal under it, failures included - the last ten of the channel
+   (`Suggestion\IndexController::JOURNAL_LENGTH`).
 4. `Suggestion\ApproveController` (or the bulk one) asks the engine to turn a suggestion into an
-   override; `Suggestion\RejectController` deletes it.
+   override; `Suggestion\RejectController` deletes it. Every write checks its CSRF token through
+   `Screen::validateCsrf()`; the rejection also accepts the per-row token of the grid's delete
+   modal ([why](../adr/0007-csrf-checked-by-screen.md)).
 
 ## Principles
 

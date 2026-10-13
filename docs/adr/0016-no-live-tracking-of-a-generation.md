@@ -11,7 +11,7 @@ Server-Sent Events, and a real progress with a run identifier and state.
 
 ## Decision
 
-None for now. The screen says the generation is queued and lists the last ten runs of the channel,
+None for now. The screen says the generation is queued and lists the latest runs of the channel,
 failures included.
 
 ## Consequences

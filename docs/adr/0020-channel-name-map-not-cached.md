@@ -5,8 +5,8 @@
 
 ## Context
 
-`SyliusChannelScopeProvider::getAvailableScopes()` builds a code to name array on each call. The
-channels themselves are read once per request, in `ChannelRegistry`: only the loop is replayed.
+The adapter that gives the engine its scopes builds the channel code to name map on each call.
+The channels themselves are read once per request: only the loop is replayed.
 
 ## Decision
 
@@ -15,7 +15,7 @@ No cache of the map.
 ## Consequences
 
 - The cost is a loop over a handful of channels per call.
-- A cached map would be one more state to empty in `reset()`.
+- A cached map would be one more state to empty between two requests.
 
 ## Related
 

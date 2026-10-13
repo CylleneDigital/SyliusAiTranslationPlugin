@@ -7,7 +7,7 @@
 
 The catalogue screen costs what the engine costs: for each page, every translation file of the
 view is parsed again (the engine caches them per process, not across requests) and each catalogue
-takes two queries.
+is read with queries of its own.
 
 ## Decision
 

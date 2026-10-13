@@ -3,12 +3,18 @@
 One file per decision: its context, what was decided, what follows from it. A decision is not
 edited once accepted: a new record supersedes it, and the old one says so in its status.
 
+A record holds the decision and its reasons, which do not move with the code. What does - file
+paths, class lists, figures, the tags to write - is in the
+[architecture overview](../architecture/overview.md), the [public contract](../architecture/public-contract.md)
+and the guides, which follow the code: a record that quoted them would be wrong at the next
+refactoring, and could not be corrected.
+
 A new record takes the next number, the template of the others (Status, Date, Context, Decision,
 Consequences, Related) and a line in the table below.
 
 | # | Decision |
 |---|---|
-| 0001 | [Generation runs go through the engine bus, not `sylius.command_bus`](0001-generation-runs-on-the-engine-bus.md) |
+| 0001 | [Generation runs go through a dedicated bus, not `sylius.command_bus`](0001-generation-runs-on-a-dedicated-bus.md) |
 | 0002 | [One prefix for everything the plugin names](0002-one-prefix-for-everything-the-plugin-names.md) |
 | 0003 | [Services are declared explicitly, without autowiring](0003-explicit-services-no-autowiring.md) |
 | 0004 | [A `Bundle` class with `SyliusPluginTrait`, not `AbstractBundle`](0004-bundle-class-with-sylius-plugin-trait.md) |

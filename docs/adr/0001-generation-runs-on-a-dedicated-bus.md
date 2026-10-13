@@ -1,4 +1,4 @@
-# 0001. Generation runs go through the engine bus, not `sylius.command_bus`
+# 0001. Generation runs go through a dedicated bus, not `sylius.command_bus`
 
 - Status: accepted
 - Date: 2026-10-13

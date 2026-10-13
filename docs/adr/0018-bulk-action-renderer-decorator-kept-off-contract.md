@@ -12,9 +12,9 @@ selection" do not render.
 
 ## Decision
 
-`src/Grid/BulkActionGridRenderer.php` decorates the Sylius service: a `ResourceGridView` goes to
-the decorated renderer untouched, a plain view to the grid bundle's own Twig renderer. It is a
-known behaviour, not a promise: it is not in `docs/architecture/public-contract.md`.
+The plugin decorates the Sylius renderer: a `ResourceGridView` goes to the decorated renderer
+untouched, a plain view to the grid bundle's own Twig renderer. It is a known behaviour, not a
+promise: the public contract does not name it.
 
 ## Consequences
 
