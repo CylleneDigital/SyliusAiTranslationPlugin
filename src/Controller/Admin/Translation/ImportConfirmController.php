@@ -26,6 +26,7 @@ final readonly class ImportConfirmController
 
     public function __invoke(Request $request): Response
     {
+        $scope = $this->screen->scope($request);
         $this->screen->validateCsrf($request);
 
         $staged = $this->stager->take($request);
@@ -33,7 +34,7 @@ final readonly class ImportConfirmController
         if (null === $staged) {
             $this->screen->flash($request, 'error', 'cyllene_digital_sylius_ai_translation.ui.import_preview_expired');
 
-            return $this->screen->redirectBack($request, $this->screen->postedScope($request));
+            return $this->screen->redirectBack($request, $scope);
         }
 
         try {
@@ -41,7 +42,7 @@ final readonly class ImportConfirmController
         } catch (\InvalidArgumentException) {
             $this->screen->flash($request, 'error', 'cyllene_digital_sylius_ai_translation.ui.import_invalid_file');
 
-            return $this->screen->redirectBack($request, $this->screen->postedScope($request));
+            return $this->screen->redirectBack($request, $scope);
         }
 
         $this->screen->flash($request, 'success', [
@@ -59,6 +60,6 @@ final readonly class ImportConfirmController
             ]);
         }
 
-        return $this->screen->redirectBack($request, $this->screen->postedScope($request));
+        return $this->screen->redirectBack($request, $scope);
     }
 }

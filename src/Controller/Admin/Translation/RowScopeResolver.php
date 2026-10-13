@@ -24,7 +24,7 @@ final readonly class RowScopeResolver
     /** @return string|null the channel code ('' = global), null when the row cannot be written */
     public function resolve(OverrideRow $row): ?string
     {
-        $scope = $this->resolveEntry($row);
+        $scope = $this->resolveForRemoval($row);
 
         if (null === $scope) {
             return null;
@@ -44,11 +44,6 @@ final readonly class RowScopeResolver
      * @return string|null the channel code ('' = global), null when the row names no entry
      */
     public function resolveForRemoval(OverrideRow $row): ?string
-    {
-        return $this->resolveEntry($row);
-    }
-
-    private function resolveEntry(OverrideRow $row): ?string
     {
         $scope = $this->scopeResolver->resolveOrNull($row->scope);
 

@@ -32,7 +32,7 @@ final readonly class ResetController
         if (null === $scope) {
             $this->screen->flash($request, 'error', 'cyllene_digital_sylius_ai_translation.ui.translation_save_invalid');
 
-            return $this->screen->redirectBack($request, '');
+            return $this->screen->redirectBack($request, $this->screen->scope($request));
         }
 
         // A page left open may ask for an override already removed: nothing was deleted then.

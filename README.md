@@ -172,12 +172,13 @@ own bus (`cyllene_digital_ai_translation.bus`), not on `sylius.command_bus`: tha
 handlers in `doctrine_transaction`, and a failing chunk would roll back the suggestions already
 billed. Dispatch `GenerateSuggestionsMessage` yourself? Use that bus too.
 
-A generation sent twice is queued twice and billed once: the engine runs one generation at a time
-per catalogue, target locale and channel, and never sends a key that already has a pending
-suggestion. That guard is a `symfony/lock` lock, whose default store is local to one machine:
-workers spread over several hosts need a shared store (`framework.lock`). A key is billed again
-when its suggestion was reviewed in between and the run still covers it - a rejected one, or any
-key of an "All keys" run.
+A generation sent twice is queued twice, and bills a key once as long as its suggestion waits for
+a review: the engine runs one generation at a time per catalogue, target locale and channel, and
+skips every key that already has a pending suggestion. That guard is a `symfony/lock` lock, whose
+default store is local to one machine: workers spread over several hosts need a shared store
+(`framework.lock`). A key is billed again in two cases: its suggestion was reviewed in between
+and the run still covers it (a rejected one, or any key of an "All keys" run), or the run is a
+"Retry errors" one, which re-sends the keys whose previous run failed for as long as they fail.
 
 An uploaded import waits for its confirmation, one hour at most, in the
 `cyllene_digital_sylius_ai_translation.import_staging` cache pool, built on `cache.app`. Behind a load

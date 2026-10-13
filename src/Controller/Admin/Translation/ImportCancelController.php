@@ -23,11 +23,12 @@ final readonly class ImportCancelController
 
     public function __invoke(Request $request): Response
     {
+        $scope = $this->screen->scope($request);
         $this->screen->validateCsrf($request);
 
         $this->stager->clear($request);
         $this->screen->flash($request, 'success', 'cyllene_digital_sylius_ai_translation.ui.import_cancelled');
 
-        return $this->screen->redirectBack($request, $this->screen->postedScope($request));
+        return $this->screen->redirectBack($request, $scope);
     }
 }

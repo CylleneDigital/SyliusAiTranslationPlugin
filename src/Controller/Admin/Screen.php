@@ -63,13 +63,13 @@ final readonly class Screen
     }
 
     /**
-     * The channel the form was posted from: a known code, or '' (the global view) for anything
-     * else. Read from the form, else from its address: PHP empties the form of an upload over
-     * `post_max_size`, and the import carries its channel there too.
+     * The channel the form was sent from: a known code, or '' (the global view) for anything
+     * else. Every form of the screen carries it in its address, which PHP leaves alone when it
+     * empties the form of an upload over `post_max_size`.
      */
-    public function postedScope(Request $request): string
+    public function scope(Request $request): string
     {
-        return $this->scopeResolver->resolve($request->request->getString('scope') ?: $request->query->getString('scope'));
+        return $this->scopeResolver->fromRequest($request);
     }
 
     /**

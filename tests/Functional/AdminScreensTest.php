@@ -271,6 +271,11 @@ final class AdminScreensTest extends WebTestCase
         $crawler = $this->client->request('GET', '/admin/translations/suggestions', ['criteria' => ['locale' => 'fr_FR', 'search' => ['value' => 'nothing-like-this']]]);
         self::assertResponseIsSuccessful();
         self::assertStringNotContainsString('Use the form above', $crawler->filter('.empty-subtitle')->text());
+
+        // A language the form above does not offer has nothing to generate.
+        $crawler = $this->client->request('GET', '/admin/translations/suggestions', ['criteria' => ['locale' => 'xx_XX']]);
+        self::assertResponseIsSuccessful();
+        self::assertStringNotContainsString('Use the form above', $crawler->filter('.empty-subtitle')->text());
     }
 
     public function testAFilterSetOnAValueCanBeSetBackOnAll(): void

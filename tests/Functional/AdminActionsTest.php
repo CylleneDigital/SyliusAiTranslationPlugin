@@ -473,34 +473,49 @@ final class AdminActionsTest extends WebTestCase
         self::assertResponseRedirects('/admin/translations');
     }
 
-    public function testAnActionWithoutARefererReturnsToTheChannelItsFormPosted(): void
+    public function testAnActionWithoutARefererReturnsToTheChannelOfItsAddress(): void
     {
         /** @var EntityManagerInterface $entityManager */
         $entityManager = self::getContainer()->get(EntityManagerInterface::class);
         $this->createTestChannel($entityManager);
 
-        // The forms of the catalogue screen carry the channel being browsed.
+        // Every form of the catalogue screen carries the channel being browsed in its address:
+        // the one place PHP leaves alone when it empties an upload over post_max_size.
         $crawler = $this->client->request('GET', '/admin/translations', ['scope' => self::BULK_TEST_CHANNEL]);
-        self::assertSame(self::BULK_TEST_CHANNEL, $crawler->filter('#import-overrides-modal input[name="scope"]')->attr('value'));
+        $query = '?scope=' . self::BULK_TEST_CHANNEL;
+        self::assertStringEndsWith($query, (string) $crawler->filter('#import-overrides-modal form')->attr('action'));
+        self::assertStringEndsWith($query, (string) $crawler->filter('#translation-edit-form')->attr('action'));
+        self::assertCount(0, $crawler->filter('#import-overrides-modal input[name="scope"]'));
 
         $token = $this->transferToken();
 
         foreach (['purge-orphans', 'import', 'import/confirm', 'import/cancel'] as $action) {
-            $this->client->request('POST', '/admin/translations/' . $action, ['_token' => $token, 'scope' => self::BULK_TEST_CHANNEL], [], ['HTTP_REFERER' => '']);
-            self::assertResponseRedirects('/admin/translations?scope=' . self::BULK_TEST_CHANNEL, null, $action);
+            $this->client->request('POST', '/admin/translations/' . $action . $query, ['_token' => $token], [], ['HTTP_REFERER' => '']);
+            self::assertResponseRedirects('/admin/translations' . $query, null, $action);
         }
 
-        // An upload over post_max_size reaches PHP without its form: the address still names the channel.
-        if (0 !== ini_parse_quantity((string) \ini_get('post_max_size'))) {
-            self::assertStringEndsWith('?scope=' . self::BULK_TEST_CHANNEL, (string) $crawler->filter('#import-overrides-modal form')->attr('action'));
+        // A save or a reset the plugin refuses goes back to that channel too.
+        foreach (['save', 'reset'] as $action) {
+            $this->client->request('POST', '/admin/translations/' . $action . $query, ['_token' => $token, 'scope' => 'NOPE'], [], ['HTTP_REFERER' => '']);
+            self::assertResponseRedirects('/admin/translations' . $query, null, $action);
+        }
 
-            $this->client->request('POST', '/admin/translations/import?scope=' . self::BULK_TEST_CHANNEL, [], [], ['CONTENT_LENGTH' => (string) \PHP_INT_MAX, 'HTTP_REFERER' => '']);
-            self::assertResponseRedirects('/admin/translations?scope=' . self::BULK_TEST_CHANNEL);
+        if (0 !== ini_parse_quantity((string) \ini_get('post_max_size'))) {
+            $this->client->request('POST', '/admin/translations/import' . $query, [], [], ['CONTENT_LENGTH' => (string) \PHP_INT_MAX, 'HTTP_REFERER' => '']);
+            self::assertResponseRedirects('/admin/translations' . $query);
         }
 
         // A channel that does not exist is the global view, not a broken address.
-        $this->client->request('POST', '/admin/translations/purge-orphans', ['_token' => $token, 'scope' => 'NOPE'], [], ['HTTP_REFERER' => '']);
+        $this->client->request('POST', '/admin/translations/purge-orphans?scope=NOPE', ['_token' => $token], [], ['HTTP_REFERER' => '']);
         self::assertResponseRedirects('/admin/translations');
+
+        // A scope that is not a string is refused before anything is written, not after.
+        $entityManager->persist((new TranslationOverride('old.key', 'gone/Old/messages', 'fr_FR'))->setValue('Orphan'));
+        $entityManager->flush();
+        $this->client->catchExceptions(true);
+        $this->client->request('POST', '/admin/translations/purge-orphans?scope[]=x', ['_token' => $token]);
+        self::assertResponseStatusCodeSame(400);
+        self::assertNotNull($this->overrideRepository()->findOneByKey('old.key', 'gone/Old/messages', 'fr_FR'));
     }
 
     public function testResettingARowWithoutAnOverrideDoesNotClaimADeletion(): void
