@@ -490,6 +490,14 @@ final class AdminActionsTest extends WebTestCase
             self::assertResponseRedirects('/admin/translations?scope=' . self::BULK_TEST_CHANNEL, null, $action);
         }
 
+        // An upload over post_max_size reaches PHP without its form: the address still names the channel.
+        if (0 !== ini_parse_quantity((string) \ini_get('post_max_size'))) {
+            self::assertStringEndsWith('?scope=' . self::BULK_TEST_CHANNEL, (string) $crawler->filter('#import-overrides-modal form')->attr('action'));
+
+            $this->client->request('POST', '/admin/translations/import?scope=' . self::BULK_TEST_CHANNEL, [], [], ['CONTENT_LENGTH' => (string) \PHP_INT_MAX, 'HTTP_REFERER' => '']);
+            self::assertResponseRedirects('/admin/translations?scope=' . self::BULK_TEST_CHANNEL);
+        }
+
         // A channel that does not exist is the global view, not a broken address.
         $this->client->request('POST', '/admin/translations/purge-orphans', ['_token' => $token, 'scope' => 'NOPE'], [], ['HTTP_REFERER' => '']);
         self::assertResponseRedirects('/admin/translations');
