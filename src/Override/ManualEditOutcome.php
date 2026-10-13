@@ -34,6 +34,6 @@ enum ManualEditOutcome
     /** The key is longer than the override table stores. */
     case KeyTooLong;
 
-    /** The engine refused the target (a catalogue identifier too long, mostly). */
+    /** The engine refused the coordinates: a locale it would never serve (`fr-FR` for `fr_FR`), a catalogue identifier too long. */
     case Invalid;
 }

@@ -10,6 +10,7 @@ use Doctrine\DBAL\Platforms\AbstractMySQLPlatform;
 use Doctrine\DBAL\Platforms\MariaDBPlatform;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\SchemaTool;
+use Psr\Cache\CacheItemPoolInterface;
 use Sylius\Component\Core\Model\AdminUserInterface;
 use Sylius\Component\Currency\Model\CurrencyInterface;
 use Sylius\Component\Locale\Model\LocaleInterface;
@@ -49,6 +50,22 @@ trait SyncsTestSchema
         }
 
         $entityManager->flush();
+    }
+
+    /**
+     * The overrides and suggestions a previous test left. The rows go behind the engine's back,
+     * so its cache goes with them: it would still serve the overrides just deleted.
+     */
+    private static function deleteOverridesAndSuggestions(): void
+    {
+        /** @var EntityManagerInterface $entityManager */
+        $entityManager = self::getContainer()->get(EntityManagerInterface::class);
+        $entityManager->getConnection()->executeStatement('DELETE FROM cyllene_translation_suggestion');
+        $entityManager->getConnection()->executeStatement('DELETE FROM cyllene_translation_override');
+
+        /** @var CacheItemPoolInterface $cache */
+        $cache = self::getContainer()->get('cache.app');
+        $cache->clear();
     }
 
     /**

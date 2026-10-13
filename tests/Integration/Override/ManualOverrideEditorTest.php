@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Tests\CylleneDigital\SyliusAiTranslationPlugin\Integration\Override;
 
+use CylleneDigital\AiTranslationBundle\Entity\TranslationOverride;
 use CylleneDigital\AiTranslationBundle\Entity\TranslationSuggestion;
 use CylleneDigital\AiTranslationBundle\Override\TranslationManagerInterface;
+use CylleneDigital\AiTranslationBundle\Repository\TranslationSuggestionRepository;
 use CylleneDigital\SyliusAiTranslationPlugin\Override\ManualEditOutcome;
 use CylleneDigital\SyliusAiTranslationPlugin\Override\ManualOverrideEditor;
 use Doctrine\ORM\EntityManagerInterface;
@@ -21,6 +23,9 @@ final class ManualOverrideEditorTest extends KernelTestCase
 {
     use SyncsTestSchema;
 
+    /** A scope the engine stores as it is given: the editor leaves knowing the channel to its caller. */
+    private const string CHANNEL = 'EDITOR_TEST_CHANNEL';
+
     public static function setUpBeforeClass(): void
     {
         self::bootKernel();
@@ -31,12 +36,12 @@ final class ManualOverrideEditorTest extends KernelTestCase
     protected function setUp(): void
     {
         self::bootKernel();
-        $this->deleteOverridesAndSuggestions();
+        self::deleteOverridesAndSuggestions();
     }
 
     protected function tearDown(): void
     {
-        $this->deleteOverridesAndSuggestions();
+        self::deleteOverridesAndSuggestions();
 
         parent::tearDown();
     }
@@ -63,15 +68,34 @@ final class ManualOverrideEditorTest extends KernelTestCase
         self::assertSame('Bienvenue %first_name%', $this->manager()->getOverrideValue('app.welcome', 'messages', 'fr_FR'));
     }
 
-    public function testASaveCountsThePendingSuggestionsOfItsEntryOnly(): void
+    public function testASaveKeepsTheLineBreaksAndEdgeSpacesOfTheValueButNotTheBrowsersLineEndings(): void
     {
-        /** @var EntityManagerInterface $entityManager */
-        $entityManager = self::getContainer()->get(EntityManagerInterface::class);
-        $entityManager->persist(new TranslationSuggestion('app.welcome', 'messages', 'fr_FR', 'Bienvenue IA', 'Welcome to the shop', 'en_US', 'stub', 0.9));
-        $entityManager->persist(new TranslationSuggestion('app.dashboard', 'messages', 'fr_FR', 'Tableau IA', 'Dashboard', 'en_US', 'stub', 0.9));
-        $entityManager->flush();
+        $edit = $this->editor()->edit('app.welcome', 'messages', 'fr_FR', '', " Bienvenue,\r\nà toi ");
+
+        self::assertSame(ManualEditOutcome::Saved, $edit->outcome);
+        self::assertSame(" Bienvenue,\nà toi ", $this->manager()->getOverrideValue('app.welcome', 'messages', 'fr_FR'));
+
+        // The same text posted again by a textarea is the value the entry already shows.
+        self::assertSame(ManualEditOutcome::Unchanged, $this->editor()->edit('app.welcome', 'messages', 'fr_FR', '', " Bienvenue,\r\nà toi ")->outcome);
+    }
+
+    public function testASaveClosesThePendingSuggestionsOfItsEntryOnly(): void
+    {
+        $this->suggest('app.welcome', 'messages', 'fr_FR');
+        $this->suggest('app.dashboard', 'messages', 'fr_FR');
+        $this->suggest('app.welcome', 'shop/Checkout/messages', 'fr_FR');
+        $this->suggest('app.welcome', 'messages', 'en_US');
+        $this->suggest('app.welcome', 'messages', 'fr_FR', self::CHANNEL);
 
         self::assertSame(1, $this->editor()->edit('app.welcome', 'messages', 'fr_FR', '', 'Bienvenue')->closedSuggestions);
+
+        // The count is the editor's, the closing the engine's: both name the same entry.
+        self::assertSame([
+            'app.dashboard messages fr_FR ',
+            'app.welcome messages en_US ',
+            'app.welcome messages fr_FR ' . self::CHANNEL,
+            'app.welcome shop/Checkout/messages fr_FR ',
+        ], $this->pendingSuggestions());
     }
 
     public function testTheValueTheEntryAlreadyShowsWritesNothing(): void
@@ -86,6 +110,19 @@ final class ManualOverrideEditorTest extends KernelTestCase
         self::assertSame('Pilotage', $this->manager()->getOverrideValue('app.dashboard', 'messages', 'fr_FR'));
     }
 
+    public function testTheValueTheEntryAlreadyShowsLeavesItsPendingSuggestionsToReview(): void
+    {
+        $this->manager()->saveOverride('app.dashboard', 'messages', 'fr_FR', 'Pilotage');
+        $this->suggest('app.dashboard', 'messages', 'fr_FR');
+
+        $edit = $this->editor()->edit('app.dashboard', 'messages', 'fr_FR', '', 'Pilotage');
+
+        // Writing the same value again would close them: nobody chose anything.
+        self::assertSame(ManualEditOutcome::Unchanged, $edit->outcome);
+        self::assertSame(0, $edit->closedSuggestions);
+        self::assertSame(['app.dashboard messages fr_FR '], $this->pendingSuggestions());
+    }
+
     public function testTypingTheFileValueBackRemovesTheOverride(): void
     {
         $this->manager()->saveOverride('app.dashboard', 'messages', 'fr_FR', 'Pilotage');
@@ -94,6 +131,31 @@ final class ManualOverrideEditorTest extends KernelTestCase
 
         self::assertSame(ManualEditOutcome::Reverted, $edit->outcome);
         self::assertTrue($edit->revertedToFile);
+        self::assertFalse($this->manager()->hasOverride('app.dashboard', 'messages', 'fr_FR'));
+    }
+
+    public function testTypingTheGlobalValueBackInAChannelIsNotAReturnToTheFile(): void
+    {
+        $this->manager()->saveOverride('app.dashboard', 'messages', 'fr_FR', 'Pilotage');
+        $this->manager()->saveOverride('app.dashboard', 'messages', 'fr_FR', 'Cockpit', null, self::CHANNEL);
+
+        $edit = $this->editor()->edit('app.dashboard', 'messages', 'fr_FR', self::CHANNEL, 'Pilotage');
+
+        self::assertSame(ManualEditOutcome::Reverted, $edit->outcome);
+        self::assertFalse($edit->revertedToFile);
+        self::assertFalse($this->manager()->hasOverride('app.dashboard', 'messages', 'fr_FR', self::CHANNEL));
+        self::assertSame('Pilotage', $this->manager()->getOverrideValue('app.dashboard', 'messages', 'fr_FR'));
+    }
+
+    public function testTypingTheParentLanguagesOverrideBackIsNotAReturnToTheFile(): void
+    {
+        $this->manager()->saveOverride('app.dashboard', 'messages', 'fr', 'Pilotage');
+        $this->manager()->saveOverride('app.dashboard', 'messages', 'fr_FR', 'Cockpit');
+
+        $edit = $this->editor()->edit('app.dashboard', 'messages', 'fr_FR', '', 'Pilotage');
+
+        self::assertSame(ManualEditOutcome::Reverted, $edit->outcome);
+        self::assertFalse($edit->revertedToFile);
         self::assertFalse($this->manager()->hasOverride('app.dashboard', 'messages', 'fr_FR'));
     }
 
@@ -145,7 +207,7 @@ final class ManualOverrideEditorTest extends KernelTestCase
 
     public function testAKeyTheOverrideTableCannotStoreIsRefused(): void
     {
-        $key = str_repeat('k', 401);
+        $key = str_repeat('k', TranslationOverride::MAX_KEY_LENGTH + 1);
 
         self::assertSame(ManualEditOutcome::KeyTooLong, $this->editor()->edit($key, 'messages', 'fr_FR', '', 'Trop long')->outcome);
         self::assertSame(0, $this->manager()->countOverrides());
@@ -156,6 +218,28 @@ final class ManualOverrideEditorTest extends KernelTestCase
         // The engine stores a locale the way the runtime looks it up: "fr_FR", not "fr-FR".
         self::assertSame(ManualEditOutcome::Invalid, $this->editor()->edit('app.welcome', 'messages', 'fr-FR', '', 'Bienvenue')->outcome);
         self::assertSame(0, $this->manager()->countOverrides());
+    }
+
+    private function suggest(string $key, string $catalogue, string $locale, string $scope = ''): void
+    {
+        /** @var EntityManagerInterface $entityManager */
+        $entityManager = self::getContainer()->get(EntityManagerInterface::class);
+        $entityManager->persist(new TranslationSuggestion($key, $catalogue, $locale, 'Suggestion', 'Source', 'en_US', 'stub', 0.9, $scope));
+        $entityManager->flush();
+    }
+
+    /** @return list<string> "key catalogue locale scope" of each suggestion still to review, sorted */
+    private function pendingSuggestions(): array
+    {
+        /** @var TranslationSuggestionRepository $repository */
+        $repository = self::getContainer()->get(TranslationSuggestionRepository::class);
+        $pending = array_map(
+            static fn (TranslationSuggestion $suggestion): string => implode(' ', [$suggestion->getKey(), $suggestion->getCatalogue(), $suggestion->getLocale(), $suggestion->getScope()]),
+            $repository->findPending(),
+        );
+        sort($pending);
+
+        return $pending;
     }
 
     private function editor(): ManualOverrideEditor
@@ -172,13 +256,5 @@ final class ManualOverrideEditorTest extends KernelTestCase
         $manager = self::getContainer()->get(TranslationManagerInterface::class);
 
         return $manager;
-    }
-
-    private function deleteOverridesAndSuggestions(): void
-    {
-        /** @var EntityManagerInterface $entityManager */
-        $entityManager = self::getContainer()->get(EntityManagerInterface::class);
-        $entityManager->getConnection()->executeStatement('DELETE FROM cyllene_translation_suggestion');
-        $entityManager->getConnection()->executeStatement('DELETE FROM cyllene_translation_override');
     }
 }
