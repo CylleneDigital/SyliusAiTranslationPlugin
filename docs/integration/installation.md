@@ -101,7 +101,8 @@ bin/console messenger:consume cyllene_ai_translation
 The plugin dispatches the runs on its own bus (`cyllene_digital_ai_translation.bus`), not on
 `sylius.command_bus`: that one wraps handlers in `doctrine_transaction`, and a failing chunk
 would roll back the suggestions already billed. If you dispatch `GenerateSuggestionsMessage`
-yourself, use that bus too.
+yourself, use that bus too
+([decision record](../adr/0001-generation-runs-on-the-engine-bus.md)).
 
 ## Behind a load balancer
 

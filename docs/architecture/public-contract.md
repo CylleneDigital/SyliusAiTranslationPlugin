@@ -78,7 +78,8 @@ Everything this page does not name, in particular:
   generation bus and the import staging cache pool
   (`cyllene_digital_sylius_ai_translation.import_staging`, which a host may re-point).
 
-It may change in a minor version.
+It may change in a minor version. The [decision records](../adr/README.md) explain choices, some
+of them about internals: a record promises nothing, only this page says what is stable.
 
 ## Support policy
 

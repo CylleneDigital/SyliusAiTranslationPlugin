@@ -16,10 +16,10 @@ key are the engine's.
 | Area | Choice |
 |---|---|
 | Screens | Sylius index pages built from Twig hooks, their lists as Sylius grids configured in PHP |
-| Front end | One Webpack Encore entrypoint the host imports: a stylesheet and Stimulus controllers, no script in the templates |
-| Asynchronous work | The engine's Messenger message, dispatched on a dedicated bus |
-| Services | Defined explicitly, one file per area in `config/services/`, without autowiring |
-| Security | The admin firewall, plus one permission per kind of action, granted by a voter from roles |
+| Front end | One Webpack Encore entrypoint the host imports: a stylesheet and Stimulus controllers, [no script in the templates](../adr/0011-no-script-in-templates.md) |
+| Asynchronous work | The engine's Messenger message, dispatched on [a dedicated bus](../adr/0001-generation-runs-on-the-engine-bus.md) |
+| Services | Defined explicitly, one file per area in `config/services/`, [without autowiring](../adr/0003-explicit-services-no-autowiring.md) |
+| Security | The admin firewall, plus [one permission per kind of action](../adr/0010-one-permission-per-kind-of-consequence.md), granted by a voter from roles |
 
 ## Code layers (`src/`)
 
@@ -83,6 +83,9 @@ key are the engine's.
   same permission the server checks.
 - **A generation never goes through a transactional bus**: a failing chunk would roll back
   suggestions already billed.
+
+Why each of them holds, and what was left as it is on purpose: the
+[decision records](../adr/README.md).
 
 ## Entry files
 

@@ -273,7 +273,8 @@ Sylius plugins, do not add personal rules to it.
   scenario when the bug is visible in the back office or in the shop.
 - Test data is created through the entities, never an `INSERT`: how an id is generated depends on
   the database, and CI runs MySQL, MariaDB and PostgreSQL.
-- Services are defined explicitly in `config/services/`, without autowiring.
+- Services are defined explicitly in `config/services/`, without autowiring
+  ([why](docs/adr/0003-explicit-services-no-autowiring.md)).
 - Update **`UPGRADE.md`** when the public surface changes; the change itself is described in the
   pull request, which feeds the release notes. The public surface is listed in
   [docs/architecture/public-contract.md](docs/architecture/public-contract.md); it only breaks in a major version.
@@ -281,6 +282,10 @@ Sylius plugins, do not add personal rules to it.
 - The codebase is written in **English** (code, comments, commits).
 - The layers and the main flows are in [docs/architecture/overview.md](docs/architecture/overview.md);
   the test strategy in [docs/testing/tests.md](docs/testing/tests.md).
+- Why the plugin is built the way it is, and what was left as it is on purpose, is in the
+  [decision records](docs/adr/README.md): read the one a change touches first. A pull request
+  that takes a decision, or reverses one, adds a record - an accepted record is superseded, not
+  edited.
 
 ## Depending on the engine
 
