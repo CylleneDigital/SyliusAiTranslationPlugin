@@ -38,10 +38,8 @@ final class PermissionsTest extends WebTestCase
         // An AccessDeniedException must become a 403 response, not a thrown exception.
         $this->client->catchExceptions(true);
 
-        $connection = $this->entityManager()->getConnection();
-        $connection->executeStatement('DELETE FROM cyllene_translation_suggestion');
-        $connection->executeStatement('DELETE FROM cyllene_translation_override');
-        $connection->executeStatement("DELETE FROM sylius_admin_user WHERE username LIKE 'ai_permission_%'");
+        self::deleteOverridesAndSuggestions();
+        $this->entityManager()->getConnection()->executeStatement("DELETE FROM sylius_admin_user WHERE username LIKE 'ai_permission_%'");
     }
 
     /**

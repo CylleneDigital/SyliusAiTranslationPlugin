@@ -38,10 +38,7 @@ final class AdminScreensTest extends WebTestCase
         $this->client = self::createClient();
         $this->client->catchExceptions(false);
 
-        /** @var EntityManagerInterface $entityManager */
-        $entityManager = self::getContainer()->get(EntityManagerInterface::class);
-        $entityManager->getConnection()->executeStatement('DELETE FROM cyllene_translation_suggestion');
-        $entityManager->getConnection()->executeStatement('DELETE FROM cyllene_translation_override');
+        self::deleteOverridesAndSuggestions();
 
         $this->client->loginUser(self::admin(self::ADMIN_USERNAME), 'admin');
     }

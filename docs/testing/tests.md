@@ -35,6 +35,9 @@ They boot the test application (`tests/TestApplication/`) on a real database and
 they need, through the entities: no fixture is loaded. `tests/SyncsTestSchema.php` creates the
 schema from the mapping, so an empty database is enough - except on a MariaDB declared as a MySQL
 and older than 11.4, which gets its schema from the migrations ([CONTRIBUTING](../../CONTRIBUTING.md)).
+Its `deleteOverridesAndSuggestions()` is how a test starts from an empty slate: it deletes the rows
+behind the engine's back, and empties `cache.app` with them - the engine would otherwise still
+serve the overrides of the previous test.
 
 A generation is only queued: no test consumes the transport, so no AI provider is ever called, and
 the keys of the test application are dummies. The suggestions the tests review are created as

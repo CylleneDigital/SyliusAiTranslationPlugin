@@ -34,6 +34,10 @@ enum ManualEditOutcome
     /** The key is longer than the override table stores. */
     case KeyTooLong;
 
-    /** The engine refused the target (a catalogue identifier too long, mostly). */
+    /**
+     * The engine refused the coordinates: a locale it would never serve (`fr-FR` for `fr_FR`, or `FR_fr` where
+     * `fr_FR` exists), a scope longer than it stores. A catalogue it cannot store has no file, so it ends as
+     * {@see self::CatalogueUnknown} first.
+     */
     case Invalid;
 }

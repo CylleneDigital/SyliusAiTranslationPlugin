@@ -48,11 +48,7 @@ final class SuggestionWorkflowTest extends KernelTestCase
     protected function setUp(): void
     {
         self::bootKernel();
-
-        /** @var EntityManagerInterface $entityManager */
-        $entityManager = self::getContainer()->get(EntityManagerInterface::class);
-        $entityManager->getConnection()->executeStatement('DELETE FROM cyllene_translation_suggestion');
-        $entityManager->getConnection()->executeStatement('DELETE FROM cyllene_translation_override');
+        self::deleteOverridesAndSuggestions();
     }
 
     public function testCataloguesAreDiscoveredFromTheHostTranslationFiles(): void

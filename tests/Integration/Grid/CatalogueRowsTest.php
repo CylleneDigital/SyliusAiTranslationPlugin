@@ -6,7 +6,6 @@ namespace Tests\CylleneDigital\SyliusAiTranslationPlugin\Integration\Grid;
 
 use CylleneDigital\AiTranslationBundle\Override\TranslationManagerInterface;
 use CylleneDigital\SyliusAiTranslationPlugin\Grid\CatalogueRows;
-use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Tests\CylleneDigital\SyliusAiTranslationPlugin\SyncsTestSchema;
 
@@ -29,12 +28,12 @@ final class CatalogueRowsTest extends KernelTestCase
     protected function setUp(): void
     {
         self::bootKernel();
-        $this->deleteOverrides();
+        self::deleteOverridesAndSuggestions();
     }
 
     protected function tearDown(): void
     {
-        $this->deleteOverrides();
+        self::deleteOverridesAndSuggestions();
 
         parent::tearDown();
     }
@@ -183,12 +182,5 @@ final class CatalogueRowsTest extends KernelTestCase
         $rows = self::getContainer()->get('cyllene_digital_sylius_ai_translation.grid.catalogue_rows');
 
         return $rows;
-    }
-
-    private function deleteOverrides(): void
-    {
-        /** @var EntityManagerInterface $entityManager */
-        $entityManager = self::getContainer()->get(EntityManagerInterface::class);
-        $entityManager->getConnection()->executeStatement('DELETE FROM cyllene_translation_override');
     }
 }

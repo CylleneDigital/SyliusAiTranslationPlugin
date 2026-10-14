@@ -64,10 +64,8 @@ final class AdminActionsTest extends WebTestCase
 
         /** @var EntityManagerInterface $entityManager */
         $entityManager = self::getContainer()->get(EntityManagerInterface::class);
-        $connection = $entityManager->getConnection();
-        $connection->executeStatement('DELETE FROM cyllene_translation_suggestion');
-        $connection->executeStatement('DELETE FROM cyllene_translation_override');
-        $connection->executeStatement("DELETE FROM sylius_admin_user WHERE username LIKE 'ai_action_%'");
+        self::deleteOverridesAndSuggestions();
+        $entityManager->getConnection()->executeStatement("DELETE FROM sylius_admin_user WHERE username LIKE 'ai_action_%'");
 
         $this->client->loginUser(self::admin(self::ADMIN_USERNAME), 'admin');
     }
