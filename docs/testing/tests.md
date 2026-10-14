@@ -34,7 +34,8 @@ They guard what no screen exercises, among others:
 They boot the test application (`tests/TestApplication/`) on a real database and create the data
 they need, through the entities: no fixture is loaded. `tests/SyncsTestSchema.php` creates the
 schema from the mapping, so an empty database is enough - except on a MariaDB declared as a MySQL
-and older than 11.4, which gets its schema from the migrations ([CONTRIBUTING](../../CONTRIBUTING.md)).
+and older than 11.4 (what Sylius 2.3.0 required for its migrations), which gets its schema from the
+migrations ([CONTRIBUTING](../../CONTRIBUTING.md)).
 Its `deleteOverridesAndSuggestions()` is how a test starts from an empty slate: it deletes the rows
 behind the engine's back, and empties `cache.app` with them - the engine would otherwise still
 serve the overrides of the previous test.

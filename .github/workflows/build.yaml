@@ -57,9 +57,7 @@ jobs:
                     -
                         sylius: "~2.3.0"
                         symfony: "^7.4 || ^8.0"
-                    # Extra databases on the primary combination. On MariaDB the Sylius migrations
-                    # skip themselves under DBAL 4, where `MariaDBPlatform` no longer extends
-                    # `MySQLPlatform`: the schema is built from the mappings there.
+                    # Extra databases on the primary combination.
                     -
                         php: "8.4"
                         sylius: "~2.3.0"
@@ -70,13 +68,11 @@ jobs:
                         sylius: "~2.3.0"
                         symfony: "^7.4"
                         database: "mariadb:10.11"
-                        database_setup: "schema"
                     -
                         php: "8.4"
                         sylius: "~2.3.0"
                         symfony: "^7.4"
                         database: "mariadb:11.4"
-                        database_setup: "schema"
                     # The test application's migrations of the engine tables are written for MySQL
                     # and MariaDB (the engine ships a mapping, no migration): on PostgreSQL the
                     # whole schema is created from the mapping instead.
