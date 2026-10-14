@@ -224,6 +224,7 @@ the support policy: [public contract](https://github.com/CylleneDigital/SyliusAi
 - [Back-office guide](https://github.com/CylleneDigital/SyliusAiTranslationPlugin/blob/main/docs/admin/user-guide.md): both screens in detail, for administrators
 - [Theming and Twig hooks](https://github.com/CylleneDigital/SyliusAiTranslationPlugin/blob/main/docs/integration/theming.md): templates, Twig hooks, grids, the menu entry, for integrators
 - [Technical documentation](https://github.com/CylleneDigital/SyliusAiTranslationPlugin/blob/main/docs/README.md): every page, by audience
+- [Decision records](https://github.com/CylleneDigital/SyliusAiTranslationPlugin/blob/main/docs/adr/README.md): why the plugin is built the way it is, one decision per file
 - [Engine documentation](https://github.com/CylleneDigital/AiTranslationBundle/tree/main/docs): concepts, provider bridges, configuration reference, CLI, caches
 
 ## Status

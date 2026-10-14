@@ -10,7 +10,7 @@ not do, installation in short and production notes: the root [README](../README.
 | Administrator (back office) | [Back-office guide](admin/user-guide.md) |
 | Sylius integrator | [Installation](integration/installation.md), [Assets](integration/assets.md), [Permissions](integration/permissions.md), [Theming and Twig hooks](integration/theming.md), [Public contract](architecture/public-contract.md) |
 | Ops (deployment) | [Installation: worker and load balancer](integration/installation.md#7-run-a-worker), [UPGRADE](../UPGRADE.md) |
-| Plugin contributor | [Architecture overview](architecture/overview.md), [Tests](testing/tests.md), [CONTRIBUTING](../CONTRIBUTING.md) |
+| Plugin contributor | [Architecture overview](architecture/overview.md), [Decision records](adr/README.md), [Tests](testing/tests.md), [CONTRIBUTING](../CONTRIBUTING.md) |
 
 ## Table of contents
 
@@ -29,6 +29,7 @@ not do, installation in short and production notes: the root [README](../README.
 
 - [Architecture overview](architecture/overview.md): what the plugin is to the engine, layers, main flows, principles
 - [Public contract](architecture/public-contract.md): what is stable (semver major), the replaceable services, the routes, what is internal, support policy
+- [Decision records](adr/README.md): one file per architecture decision - its context, the decision, what follows from it
 
 ### Development
 
