@@ -32,7 +32,17 @@ final readonly class ResetController
         if (null === $scope) {
             $this->screen->flash($request, 'error', 'cyllene_digital_sylius_ai_translation.ui.translation_save_invalid');
 
-            return $this->screen->redirectBack($request, '');
+            return $this->screen->redirectBack($request, $this->screen->scope($request));
+        }
+
+        // A page left open may ask for an override already removed: nothing was deleted then.
+        // Two resets of the same entry at the same moment still both pass this check and both
+        // report a deletion: removeOverride() returns nothing, so only the engine can tell which
+        // one deleted the row. Known and accepted, no data is lost.
+        if (!$this->translationManager->hasOverride($row->key, $row->catalogue, $row->locale, $scope)) {
+            $this->screen->flash($request, 'info', 'cyllene_digital_sylius_ai_translation.ui.translation_reset_nothing');
+
+            return $this->screen->redirectBack($request, $scope);
         }
 
         $this->translationManager->removeOverride($row->key, $row->catalogue, $row->locale, $scope);

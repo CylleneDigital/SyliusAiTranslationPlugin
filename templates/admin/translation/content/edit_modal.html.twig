@@ -12,7 +12,7 @@
 <div class="modal fade" id="translation-edit-modal" tabindex="-1" aria-hidden="true" data-controller="ait-admin-edit-modal" data-bs-backdrop="static">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
-            <form id="translation-edit-form" method="post" action="{{ path('cyllene_digital_sylius_ai_translation_admin_translation_save') }}">
+            <form id="translation-edit-form" method="post" action="{{ path('cyllene_digital_sylius_ai_translation_admin_translation_save', hookable_metadata.context.scope_params) }}">
                 <input type="hidden" name="_token" value="{{ csrf }}">
                 <input type="hidden" name="key" data-ait-admin-edit-modal-target="keyInput">
                 <input type="hidden" name="catalogue" data-ait-admin-edit-modal-target="catalogueInput">
@@ -60,7 +60,7 @@
                 </div>
                 <div class="modal-footer">
                     {# Deletes the override: a second submit of the same form, pointed at the reset route. #}
-                    <button type="submit" class="btn btn-outline-warning me-auto" data-ait-admin-edit-modal-target="reset" formaction="{{ path('cyllene_digital_sylius_ai_translation_admin_translation_reset') }}">
+                    <button type="submit" class="btn btn-outline-warning me-auto" data-ait-admin-edit-modal-target="reset" formaction="{{ path('cyllene_digital_sylius_ai_translation_admin_translation_reset', hookable_metadata.context.scope_params) }}">
                         {{ ux_icon('tabler:arrow-back-up') }}
                         {{ 'cyllene_digital_sylius_ai_translation.ui.reset_to_original'|trans }}
                     </button>

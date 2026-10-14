@@ -36,6 +36,7 @@ cyllene_digital_sylius_ai_translation:
         translation_saved_placeholder_warning: "Translation saved — careful, placeholders changed compared to the previous value: {placeholders}."
         suggestion_syntax_invalid: "Approval refused — {issues}."
         translation_reset: "Override deleted — the entry shows the value it inherits, or its file value, again."
+        translation_reset_nothing: "Nothing to delete — this entry has no override any more."
         translation_cleared: "Override deleted — the entry has no translation left."
         translation_save_invalid: "Save refused — this entry cannot be saved (unknown locale or channel, or an identifier too long), reload the page."
         translation_key_too_long: "Save refused — this key is longer than the {max} characters an override can store."

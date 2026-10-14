@@ -45,6 +45,21 @@ final class GridQuery
     }
 
     /**
+     * Whether the one thing narrowing the list is this filter: an empty list then has nothing
+     * for that value, rather than a search to adjust.
+     *
+     * @param array<array-key, mixed> $query
+     */
+    public static function isFilteringOnlyBy(array $query, string $filter): bool
+    {
+        $criteria = self::criteria($query);
+        $only = [$filter => true];
+
+        return self::isFiltering(['criteria' => array_intersect_key($criteria, $only)]) &&
+            !self::isFiltering(['criteria' => array_diff_key($criteria, $only)]);
+    }
+
+    /**
      * @param array<array-key, mixed> $query
      *
      * @return array<string, string> field => what was asked for it, a valid direction or not

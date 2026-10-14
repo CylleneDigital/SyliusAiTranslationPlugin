@@ -47,14 +47,14 @@
                 {% endif %}
             </div>
             <div class="card-footer d-flex gap-2">
-                <form method="POST" action="{{ path('cyllene_digital_sylius_ai_translation_admin_translation_import_confirm') }}">
+                <form method="POST" action="{{ path('cyllene_digital_sylius_ai_translation_admin_translation_import_confirm', scope_params) }}">
                     <input type="hidden" name="_token" value="{{ csrf_token('cyllene_digital_sylius_ai_translation_transfer') }}">
                     <button type="submit" class="btn btn-primary">
                         {{ ux_icon('tabler:check') }}
                         {{ 'cyllene_digital_sylius_ai_translation.ui.import_confirm'|trans }}
                     </button>
                 </form>
-                <form method="POST" action="{{ path('cyllene_digital_sylius_ai_translation_admin_translation_import_cancel') }}">
+                <form method="POST" action="{{ path('cyllene_digital_sylius_ai_translation_admin_translation_import_cancel', scope_params) }}">
                     <input type="hidden" name="_token" value="{{ csrf_token('cyllene_digital_sylius_ai_translation_transfer') }}">
                     <button type="submit" class="btn btn-link link-secondary">
                         {{ 'sylius.ui.cancel'|trans }}
@@ -148,7 +148,7 @@
                 {% if is_granted('cyllene_digital_sylius_ai_translation.edit') %}
                     <form
                         method="POST"
-                        action="{{ path('cyllene_digital_sylius_ai_translation_admin_translation_purge_orphans') }}"
+                        action="{{ path('cyllene_digital_sylius_ai_translation_admin_translation_purge_orphans', scope_params) }}"
                         data-controller="ait-admin-confirm"
                         data-ait-admin-confirm-message-value="{{ 'cyllene_digital_sylius_ai_translation.ui.purge_orphans_confirm'|trans }}"
                         data-action="submit->ait-admin-confirm#confirm"

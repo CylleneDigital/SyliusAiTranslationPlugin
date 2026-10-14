@@ -37,7 +37,7 @@ final readonly class SaveController
         if (null === $scope) {
             $this->screen->flash($request, 'error', 'cyllene_digital_sylius_ai_translation.ui.translation_save_invalid');
 
-            return $this->screen->redirectBack($request, '');
+            return $this->screen->redirectBack($request, $this->screen->scope($request));
         }
 
         $edit = $this->editor->edit($row->key, $row->catalogue, $row->locale, $scope, $row->value);

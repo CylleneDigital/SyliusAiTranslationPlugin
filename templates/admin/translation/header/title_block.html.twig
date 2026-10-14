@@ -53,7 +53,7 @@
 <div class="modal fade" id="import-overrides-modal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content">
-            <form method="POST" action="{{ path('cyllene_digital_sylius_ai_translation_admin_translation_import') }}" enctype="multipart/form-data">
+            <form method="POST" action="{{ path('cyllene_digital_sylius_ai_translation_admin_translation_import', scope_params) }}" enctype="multipart/form-data">
                 <input type="hidden" name="_token" value="{{ csrf_token('cyllene_digital_sylius_ai_translation_transfer') }}">
                 <div class="modal-header">
                     <h5 class="modal-title">

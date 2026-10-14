@@ -23,6 +23,7 @@ final readonly class PurgeOrphansController
 
     public function __invoke(Request $request): Response
     {
+        $scope = $this->screen->scope($request);
         $this->screen->validateCsrf($request);
 
         $this->screen->flash($request, 'success', [
@@ -30,6 +31,6 @@ final readonly class PurgeOrphansController
             'parameters' => ['count' => $this->translationManager->purgeOrphanOverrides()],
         ]);
 
-        return $this->screen->redirectBack($request, '');
+        return $this->screen->redirectBack($request, $scope);
     }
 }

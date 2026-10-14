@@ -23,6 +23,7 @@ final readonly class Screen
     public function __construct(
         private CsrfTokenManagerInterface $csrfTokenManager,
         private UrlGeneratorInterface $urlGenerator,
+        private ChannelScopeResolver $scopeResolver,
         private string $csrfIntention,
         private string $indexRoute,
     ) {
@@ -59,6 +60,16 @@ final readonly class Screen
         if ($session instanceof FlashBagAwareSessionInterface) {
             $session->getFlashBag()->add($type, $message);
         }
+    }
+
+    /**
+     * The channel the form was sent from: a known code, or '' (the global view) for anything
+     * else. Every form of the screen carries it in its address, which PHP leaves alone when it
+     * empties the form of an upload over `post_max_size`.
+     */
+    public function scope(Request $request): string
+    {
+        return $this->scopeResolver->fromRequest($request);
     }
 
     /**

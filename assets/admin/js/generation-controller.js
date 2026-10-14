@@ -59,7 +59,7 @@ export default class extends Controller {
         this.submitted = true;
         // A navigation that never comes (Escape, Stop, a request that fails) leaves the page
         // as it is: without this the button would do nothing until a reload. A long minute,
-        // not a few seconds: a slow answer must not let a second click bill the run twice.
+        // not a few seconds: a slow answer must not let a second click queue the run again.
         this.release = setTimeout(() => {
             this.submitted = false;
         }, 60000);

@@ -134,7 +134,12 @@ so a channel-specific wording in the source language drives the suggestion.
   **async transport** (`cyllene_ai_translation`, declared and routed by the engine,
   DSN configurable via `messenger_transport_dsn`): run
   `messenger:consume cyllene_ai_translation` for the suggestions to arrive (the flash
-  says the generation is queued; refresh to watch them land). A "Retry errors" switch
+  says the generation is queued; refresh to watch them land). The button locks for a minute
+  once clicked, in the browser only: the same form sent again - from a second tab, or after that
+  minute - queues its runs again. The engine does not bill a key a second time while its
+  suggestion waits for a review (it skips a run while the same one is in progress, and every key
+  that already has a pending suggestion); once the suggestion is rejected, or approved before an
+  "All keys" run, the key is sent and billed again. A "Retry errors" switch
   re-sends **only** the keys whose previous run failed: no other key, missing or not. A provider failure stores an **errored
   suggestion per unfulfilled key** (no value, confidence 0, the provider error on the
   row) and is journaled in `cyllene_translation_generation_log` without Messenger retry

@@ -473,6 +473,67 @@ final class AdminActionsTest extends WebTestCase
         self::assertResponseRedirects('/admin/translations');
     }
 
+    public function testAnActionWithoutARefererReturnsToTheChannelOfItsAddress(): void
+    {
+        /** @var EntityManagerInterface $entityManager */
+        $entityManager = self::getContainer()->get(EntityManagerInterface::class);
+        $this->createTestChannel($entityManager);
+
+        // Every form of the catalogue screen carries the channel being browsed in its address:
+        // the one place PHP leaves alone when it empties an upload over post_max_size.
+        $crawler = $this->client->request('GET', '/admin/translations', ['scope' => self::BULK_TEST_CHANNEL]);
+        $query = '?scope=' . self::BULK_TEST_CHANNEL;
+        self::assertStringEndsWith($query, (string) $crawler->filter('#import-overrides-modal form')->attr('action'));
+        self::assertStringEndsWith($query, (string) $crawler->filter('#translation-edit-form')->attr('action'));
+        self::assertCount(0, $crawler->filter('#import-overrides-modal input[name="scope"]'));
+
+        $token = $this->transferToken();
+
+        foreach (['purge-orphans', 'import', 'import/confirm', 'import/cancel'] as $action) {
+            $this->client->request('POST', '/admin/translations/' . $action . $query, ['_token' => $token], [], ['HTTP_REFERER' => '']);
+            self::assertResponseRedirects('/admin/translations' . $query, null, $action);
+        }
+
+        // A save or a reset the plugin refuses goes back to that channel too.
+        foreach (['save', 'reset'] as $action) {
+            $this->client->request('POST', '/admin/translations/' . $action . $query, ['_token' => $token, 'scope' => 'NOPE'], [], ['HTTP_REFERER' => '']);
+            self::assertResponseRedirects('/admin/translations' . $query, null, $action);
+        }
+
+        if (0 !== ini_parse_quantity((string) \ini_get('post_max_size'))) {
+            $this->client->request('POST', '/admin/translations/import' . $query, [], [], ['CONTENT_LENGTH' => (string) \PHP_INT_MAX, 'HTTP_REFERER' => '']);
+            self::assertResponseRedirects('/admin/translations' . $query);
+        }
+
+        // A channel that does not exist is the global view, not a broken address.
+        $this->client->request('POST', '/admin/translations/purge-orphans?scope=NOPE', ['_token' => $token], [], ['HTTP_REFERER' => '']);
+        self::assertResponseRedirects('/admin/translations');
+
+        // A scope that is not a string is refused before anything is written, not after.
+        $entityManager->persist((new TranslationOverride('old.key', 'gone/Old/messages', 'fr_FR'))->setValue('Orphan'));
+        $entityManager->flush();
+        $this->client->catchExceptions(true);
+        $this->client->request('POST', '/admin/translations/purge-orphans?scope[]=x', ['_token' => $token]);
+        self::assertResponseStatusCodeSame(400);
+        self::assertNotNull($this->overrideRepository()->findOneByKey('old.key', 'gone/Old/messages', 'fr_FR'));
+    }
+
+    public function testResettingARowWithoutAnOverrideDoesNotClaimADeletion(): void
+    {
+        $row = ['_token' => $this->transferToken(), 'key' => 'app.welcome', 'catalogue' => 'messages', 'locale' => 'fr_FR', 'scope' => ''];
+
+        $this->client->request('POST', '/admin/translations/reset', $row);
+        self::assertResponseRedirects();
+        $this->client->followRedirect();
+        self::assertSelectorTextContains('.alert-info', 'Nothing to delete');
+
+        $this->client->request('POST', '/admin/translations/save', $row + ['value' => 'Bienvenue']);
+        $this->client->followRedirect();
+        $this->client->request('POST', '/admin/translations/reset', $row);
+        $this->client->followRedirect();
+        self::assertSelectorTextContains('.alert-success', 'Override deleted');
+    }
+
     public function testTheBulkActionsActOnTheSelectedPendingSuggestionsOnly(): void
     {
         /** @var EntityManagerInterface $entityManager */

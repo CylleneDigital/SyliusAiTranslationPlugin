@@ -52,6 +52,9 @@ final readonly class IndexController
     public function __invoke(Request $request): Response
     {
         $scope = $this->scopeResolver->fromRequest($request);
+        // A channel narrows the locales to the ones it exposes.
+        $locales = $this->scopeResolver->getLocales($scope) ?? $this->translationManager->getAvailableLocales();
+        $query = $request->query->all();
 
         return new Response($this->twig->render('@CylleneDigitalSyliusAiTranslationPlugin/admin/suggestion/index.html.twig', [
             'scope' => $scope,
@@ -63,12 +66,14 @@ final readonly class IndexController
             'default_provider' => $this->defaultProvider,
             'available_catalogues' => $this->translationManager->getCatalogues(),
             'catalogue_groups' => $this->choices->getCatalogueChoicesByCategory(),
-            // A channel narrows the locales to the ones it exposes.
-            'available_locales' => $this->scopeResolver->getLocales($scope) ?? $this->translationManager->getAvailableLocales(),
+            'available_locales' => $locales,
             // Same cascade as the catalogue's reference column: the channel's default
             // locale when a channel is browsed, else the coverage default locale.
             'source_locale_default' => $this->scopeResolver->getReferenceLocale($scope),
-            'filtered' => GridQuery::isFiltering($request->query->all()),
+            'filtered' => GridQuery::isFiltering($query),
+            // Where a generation lands, and what "nothing for this language" looks like - for a
+            // language the form above can generate: any other one is a search to adjust.
+            'filtered_by_target_locale_only' => GridQuery::isFilteringOnlyBy($query, 'locale') && \in_array(GridQuery::criteria($query)['locale'], $locales, true),
             // Generation is asynchronous: its outcome, failures included, is read from the journal.
             'generation_logs' => $this->doctrine->getRepository(GenerationLog::class)->findBy(['scope' => $scope], ['id' => 'DESC'], self::JOURNAL_LENGTH),
         ]));
