@@ -15,4 +15,7 @@ The listener adding the plugin's entry runs at priority `-1024`, after the usual
 ## Consequences
 
 - The entry lands after a host's reordering, at the end of the menu, instead of breaking it.
-- A host that wants it elsewhere moves it in a listener of a lower priority.
+- A host that wants it elsewhere moves it in a listener of a lower priority. A host that reorders
+  with a fixed list there must name the plugin's entry in it, or reorder tolerantly (the children
+  it names in its order, the others after them): a list without it raises the same KnpMenu
+  exception.

@@ -23,9 +23,16 @@ is skipped), and a run skips every key that already has a pending suggestion.
   a rejected one, or any key of an "All keys" run. That is what asking again means.
 - A "Retry errors" run is the exception to the skip, by definition: it re-sends the keys whose
   previous run failed, for as long as they fail.
-- The engine's lock store is the host's: the default one is local to a machine, so workers spread
-  over several hosts need a shared store. That is a deployment note of the engine, which documents
-  it.
+- The guard is a behaviour of the engine, not part of its public contract: the plugin calls
+  nothing of it, and a minor version of the engine could change it without notice, bringing the
+  double billing back. The plugin relies there on what the contract does not promise
+  ([0013](0013-only-the-engine-public-contract.md)); having it written into the contract is a
+  request to the engine.
+- The lock protects the bill only while its store answers. The store is the host's: the default
+  one is local to a machine, so workers spread over several hosts need a shared one. When the store
+  cannot be reached, the engine runs the generation unguarded rather than refusing it: two
+  concurrent runs are then billed twice. Duplicate suggestions stay impossible, the database
+  refuses them. That is a deployment note of the engine, which documents it.
 - A lock in the plugin, or a single-use token in the session, would duplicate the engine's guard
   without covering more.
 
@@ -33,4 +40,5 @@ is skipped), and a run skips every key that already has a pending suggestion.
 
 - [0001. Generation runs go through a dedicated bus, not `sylius.command_bus`](0001-generation-runs-on-a-dedicated-bus.md)
 - [0012. No file is written, nothing AI-generated is applied without a human](0012-nothing-written-to-files-nothing-applied-without-a-human.md)
+- [0013. Only the engine's public contract is used](0013-only-the-engine-public-contract.md)
 - [0016. No live tracking of a generation](0016-no-live-tracking-of-a-generation.md)

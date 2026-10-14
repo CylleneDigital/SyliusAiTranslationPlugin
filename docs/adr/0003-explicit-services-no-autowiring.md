@@ -18,9 +18,8 @@ since the routes name them that way.
 
 - A new constructor argument is added to the service definition.
 - A tag autoconfiguration would have set is added by hand.
-- The attributes that only autoconfiguration reads (`#[Autowire]`, `#[AsEventListener]`,
-  `#[AsDecorator]`) do nothing here and are not used. `#[AsGrid]` stays: the grid class reads it
-  itself.
+- The attributes that only autowiring or autoconfiguration reads do nothing here and are not
+  used. One a class reads itself still works.
 - A controller registered under a prefixed id would no longer be found by its route.
 
 ## Related

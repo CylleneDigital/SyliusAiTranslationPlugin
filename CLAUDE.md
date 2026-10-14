@@ -119,7 +119,9 @@ CI create the schema from the mapping (`database_setup: schema`), so only the My
 
 Each rule is here in full, with the names the code uses; its reasons are in the decision record it
 links ([`docs/adr/`](docs/adr/README.md)). Read the record before changing a rule, and write a new
-record rather than editing an accepted one - the records hold no path nor figure, this file does.
+record rather than editing an accepted one. A record names what its decision is about (a bus, a
+priority, a status code), never a file path, a version or a list that moves with the code: this
+file does.
 
 - **Generation runs go through `cyllene_digital_ai_translation.bus`, never `sylius.command_bus`**
   ([0001](docs/adr/0001-generation-runs-on-a-dedicated-bus.md)).

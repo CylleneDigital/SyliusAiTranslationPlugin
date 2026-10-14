@@ -6,15 +6,14 @@
 ## Context
 
 The maintainers work with local files that are not distributed (a Docker stack, a task runner,
-private notes). They could be ignored per workstation in `.git/info/exclude` instead.
+private notes). They could be ignored per workstation, in Git's local exclude file, instead.
 
 ## Decision
 
-They are listed in the versioned `.gitignore`, under "Maintainers' local tooling, not
-distributed".
+They are listed in the versioned `.gitignore`, in a section of their own.
 
 ## Consequences
 
 - A `git add -A` on a new workstation cannot ship them.
 - The repository names files a contributor will never see; the stack contributors use is the
-  versioned `compose.yml`.
+  versioned Compose one.

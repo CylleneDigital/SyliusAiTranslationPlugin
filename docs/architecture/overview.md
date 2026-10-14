@@ -74,9 +74,10 @@ key are the engine's.
    journal under it, failures included - the last ten of the channel
    (`Suggestion\IndexController::JOURNAL_LENGTH`).
 4. `Suggestion\ApproveController` (or the bulk one) asks the engine to turn a suggestion into an
-   override; `Suggestion\RejectController` deletes it. Every write checks its CSRF token through
-   `Screen::validateCsrf()`; the rejection also accepts the per-row token of the grid's delete
-   modal ([why](../adr/0007-csrf-checked-by-screen.md)).
+   override; `Suggestion\RejectController` deletes it. The writes check their CSRF token through `Screen`,
+   most of them with `Screen::validateCsrf()`. `RejectController` does not: it also accepts the
+   per-row token of the grid's delete modal, and requiring the screen's one there would answer 403
+   to a rejection from the grid ([why](../adr/0007-csrf-checked-by-screen.md)).
 
 ## Principles
 

@@ -6,8 +6,8 @@
 ## Context
 
 The suggestions screen counts the pending suggestions of the channel on every display and passes
-`pending_count` to its hooks. No template of the plugin reads it. `docs/integration/theming.md`
-lists it among the data a host overriding the screen can use, and 1.0.0 was released with it.
+`pending_count` to its hooks. No template of the plugin reads it. The theming guide lists it
+among the data a host overriding the screen can use, and a released version carries it.
 
 ## Decision
 
@@ -17,4 +17,4 @@ It stays.
 
 - One `COUNT` query per page.
 - Removing it would break a host template that reads it: not before a major version, with an
-  entry in `UPGRADE.md`.
+  entry in the upgrade guide.

@@ -3,8 +3,9 @@
 One file per decision: its context, what was decided, what follows from it. A decision is not
 edited once accepted: a new record supersedes it, and the old one says so in its status.
 
-A record holds the decision and its reasons, which do not move with the code. What does - file
-paths, class lists, figures, the tags to write - is in the
+A record holds the decision and its reasons, which do not move with the code. It names what the
+decision is about (a bus, a priority, a status code), nothing else of the code. What moves with
+it - file paths, versions, class lists, counts, the tags to write - is in the
 [architecture overview](../architecture/overview.md), the [public contract](../architecture/public-contract.md)
 and the guides, which follow the code: a record that quoted them would be wrong at the next
 refactoring, and could not be corrected.

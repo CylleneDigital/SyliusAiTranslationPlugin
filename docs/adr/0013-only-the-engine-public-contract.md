@@ -5,7 +5,7 @@
 
 ## Context
 
-The engine documents its public surface in its `docs/public-contract.md`. Everything else is
+The engine documents its public surface in a public contract. Everything else is
 internal and may change in a minor version, which the plugin accepts with `^1.0`.
 
 ## Decision
