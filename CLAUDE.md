@@ -83,13 +83,13 @@ from its cache. Anything else that deletes override rows directly has the same e
 Integration and functional tests sync the schema via `SchemaTool::updateSchema` (no migrations to run before
 them) and create the data they need - through entities, never an `INSERT`: how an id is
 generated depends on the database, and CI runs MySQL, MariaDB and PostgreSQL. The one database
-they leave as they find it is a MariaDB declared as a MySQL, which is what a workstation does to
-run the Sylius migrations (`CONTRIBUTING.md`): the engine would ask it for MySQL's collation. CI
-declares MariaDB as such and builds its schema from the mapping. The migrations under `tests/TestApplication/src/Migrations/`
+they leave as they find it is a MariaDB declared as a MySQL, which is what a workstation had to do
+to run the Sylius 2.3.0 migrations under DBAL 4 (fixed in 2.3.1 by Sylius#19272): the engine would
+ask it for MySQL's collation. CI declares MariaDB as such. The migrations under `tests/TestApplication/src/Migrations/`
 version the engine tables for the dev site, as a host project would: the engine ships its Doctrine
 mapping, not migrations. They are written for MySQL and MariaDB (the binary collation is chosen
-from the server's real version) and abort on another database: the PostgreSQL and MariaDB jobs of
-CI create the schema from the mapping (`database_setup: schema`), so only the MySQL jobs run them.
+from the server's real version) and abort on another database: the PostgreSQL jobs of CI create
+the schema from the mapping (`database_setup: schema`), the MySQL and MariaDB jobs run them.
 
 ## Known pitfalls
 

@@ -48,9 +48,9 @@ DATABASE_URL=mysql://root@127.0.0.1:3307/cyllene_digital_sylius_ai_translation_p
 The integration and functional tests also create the schema themselves, from the mapping: on MySQL and PostgreSQL
 an empty database is enough for them.
 
-On MariaDB, declare a MySQL server version (`serverVersion=8.0.36`) and run the migrations before
-the tests: on a database declared as MariaDB, DBAL 4 skips the Sylius core migrations, and on one
-declared as MySQL the tests leave the schema as the migrations made it. On PostgreSQL, skip the migrations - the ones of
+On MariaDB, declare MariaDB as such (`serverVersion=11.4.0-MariaDB`) and run Sylius 2.3.1 or
+later: with DBAL 4, Sylius 2.3.0 marks its core migrations as executed but skips them there
+(Sylius#19272). On PostgreSQL, skip the migrations - the ones of
 the engine tables (`tests/TestApplication/src/Migrations/`) are written for MySQL and MariaDB - and
 create the schema from the mapping:
 
