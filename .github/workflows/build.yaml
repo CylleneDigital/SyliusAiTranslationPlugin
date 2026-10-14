@@ -57,9 +57,9 @@ jobs:
                     -
                         sylius: "~2.3.0"
                         symfony: "^7.4 || ^8.0"
-                    # Extra databases on the primary combination. The build action declares MariaDB
-                    # with a bare version, which DBAL reads as MySQL: that is what the Sylius 2.3
-                    # migrations need, they skip a database declared as MariaDB.
+                    # Extra databases on the primary combination. On MariaDB the Sylius migrations
+                    # skip themselves under DBAL 4, where `MariaDBPlatform` no longer extends
+                    # `MySQLPlatform`: the schema is built from the mappings there.
                     -
                         php: "8.4"
                         sylius: "~2.3.0"
@@ -70,11 +70,13 @@ jobs:
                         sylius: "~2.3.0"
                         symfony: "^7.4"
                         database: "mariadb:10.11"
+                        database_setup: "schema"
                     -
                         php: "8.4"
                         sylius: "~2.3.0"
                         symfony: "^7.4"
                         database: "mariadb:11.4"
+                        database_setup: "schema"
                     # The test application's migrations of the engine tables are written for MySQL
                     # and MariaDB (the engine ships a mapping, no migration): on PostgreSQL the
                     # whole schema is created from the mapping instead.
@@ -125,7 +127,7 @@ jobs:
 
             -
                 name: Build Sylius Test Application
-                uses: SyliusLabs/BuildTestAppAction@fbdfc158a99f540fc3bbe554b46120d14444f2f4 # v4.3.0
+                uses: SyliusLabs/BuildTestAppAction@c3b108b5f3c299c55f429a8cf0ed88734d4f4979 # v4.3.1
                 with:
                     # The admin pages the tests render include the Webpack Encore entries:
                     # without a front-end build they answer 500 without saying why.
@@ -253,7 +255,7 @@ jobs:
 
             -
                 name: Build Sylius Test Application
-                uses: SyliusLabs/BuildTestAppAction@fbdfc158a99f540fc3bbe554b46120d14444f2f4 # v4.3.0
+                uses: SyliusLabs/BuildTestAppAction@c3b108b5f3c299c55f429a8cf0ed88734d4f4979 # v4.3.1
                 with:
                     e2e_js: "yes"
                     cache_key: "${{ runner.os }}-php-8.4-composer-${{ hashFiles('**/composer.json') }}"
