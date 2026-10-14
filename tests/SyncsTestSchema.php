@@ -52,7 +52,7 @@ trait SyncsTestSchema
     }
 
     /**
-     * A MariaDB declared with a bare version - what the CI build action does, the Sylius
+     * A MariaDB declared with a bare version - what a workstation does, the Sylius
      * migrations needing it - is a MySQL to DBAL: the engine then asks for MySQL's binary
      * collation, which MariaDB only knows from 11.4 on. Such a database got its schema from
      * the migrations, and is left as they made it.
