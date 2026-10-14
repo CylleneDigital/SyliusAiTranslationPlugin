@@ -21,3 +21,9 @@ cyllene_digital_ai_translation:
             api_key: '%env(LLM_API_KEY)%'
             model: llama3.2
             base_uri: 'http://localhost:11434/v1'
+
+# The kernel tests empty cache.app before each test, the engine's model prices with it: each
+# estimate would download them again from GitHub. No test reads a cost.
+when@test:
+    cyllene_digital_ai_translation:
+        model_prices_url: false
