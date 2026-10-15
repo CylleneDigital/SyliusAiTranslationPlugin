@@ -104,13 +104,18 @@ would roll back the suggestions already billed. If you dispatch `GenerateSuggest
 yourself, use that bus too
 ([decision record](../adr/0001-generation-runs-on-a-dedicated-bus.md)).
 
+Keep that transport asynchronous: a run is stopped before its next chunk when its channel is
+deleted meanwhile, which a run executed inside the admin's request, on a synchronous transport,
+does not see ([decision record](../adr/0024-double-billing-guard-is-the-engines-contract.md)).
+
 ## The parsed translation files
 
 The engine keeps the translation files it parses in the
-`cyllene_digital_ai_translation.translation_files_cache` pool, keyed by their content: a file
-rewritten in place is read again at once. After an upgrade of `symfony/translation`, the files
-already parsed stay as they were until they expire (seven days). `cache:clear` does not empty the
-pool when `APP_SHARE_DIR` is set (the Symfony 7.4 and 8 skeletons):
+`cyllene_digital_ai_translation.translation_files_cache` pool, keyed by their path and content: a
+file rewritten in place is read again at once. A new `symfony/translation` release that parses a
+file differently is only seen once the cached entry expires (seven days by default).
+`cache:clear` does not empty the pool when `APP_SHARE_DIR` is set (the Symfony 7.4 and 8
+skeletons):
 
 ```bash
 bin/console cache:pool:clear cyllene_digital_ai_translation.translation_files_cache

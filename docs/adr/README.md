@@ -11,7 +11,8 @@ and the guides, which follow the code: a record that quoted them would be wrong 
 refactoring, and could not be corrected.
 
 A new record takes the next number, the template of the others (Status, Date, Context, Decision,
-Consequences, Related) and a line in the table below.
+Consequences, Related, and Supersedes under the date when it replaces one) and a line in the
+table below.
 
 | # | Decision |
 |---|---|

@@ -27,7 +27,7 @@ final class ChannelRegistry implements ResetInterface
     /** @var array<string, ChannelInterface>|null channel code => channel */
     private ?array $channels = null;
 
-    private ?\DateTimeImmutable $readAt = null;
+    private ?\DateTimeImmutable $expiresAt = null;
 
     /**
      * @param ChannelRepositoryInterface<ChannelInterface> $channelRepository
@@ -44,7 +44,7 @@ final class ChannelRegistry implements ResetInterface
     public function reset(): void
     {
         $this->channels = null;
-        $this->readAt = null;
+        $this->expiresAt = null;
     }
 
     /**
@@ -59,7 +59,7 @@ final class ChannelRegistry implements ResetInterface
         }
 
         $this->channels = [];
-        $this->readAt = $this->clock->now();
+        $this->expiresAt = $this->clock->now()->modify(self::OUTSIDE_A_REQUEST_LIFETIME);
 
         foreach ($this->channelRepository->findAll() as $channel) {
             $code = $channel->getCode();
@@ -72,6 +72,7 @@ final class ChannelRegistry implements ResetInterface
         return $this->channels;
     }
 
+    /** @phpstan-impure */
     public function get(string $code): ?ChannelInterface
     {
         return $this->all()[$code] ?? null;
@@ -80,6 +81,6 @@ final class ChannelRegistry implements ResetInterface
     private function isFresh(): bool
     {
         return null !== $this->requestStack->getMainRequest() ||
-            $this->clock->now() < $this->readAt?->modify(self::OUTSIDE_A_REQUEST_LIFETIME);
+            $this->clock->now() < $this->expiresAt;
     }
 }

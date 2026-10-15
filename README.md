@@ -177,7 +177,8 @@ a review: the engine runs one generation at a time per catalogue, target locale 
 skips every key that already has a pending suggestion. That guard is a `symfony/lock` lock, whose
 default store is local to one machine: workers spread over several hosts need a shared store
 (`framework.lock`). When the store cannot be reached, the engine logs a warning and runs the
-generation unguarded: two concurrent runs are then billed twice. A key is billed again in two
+generation unguarded: two concurrent runs can then both call the provider, the database stopping
+the one that reserves a key the other holds before it pays for that chunk. A key is billed again in two
 cases: its suggestion was reviewed in between and the run still covers it (a rejected one, or any
 key of an "All keys" run), or the run is a "Retry errors" one, which re-sends the keys whose
 previous run failed for as long as they fail. A run for a channel deleted since it was queued
@@ -186,11 +187,11 @@ while it runs stops before its next chunk, journaled as a failure: only the chun
 the provider is billed.
 
 The engine keeps the translation files it parses in the
-`cyllene_digital_ai_translation.translation_files_cache` pool, keyed by their content: a file
-rewritten in place is read again at once. After an upgrade of `symfony/translation`, the files
-already parsed stay as they were until they expire (seven days): empty the pool with
-`bin/console cache:pool:clear cyllene_digital_ai_translation.translation_files_cache`.
-`cache:clear` does not when `APP_SHARE_DIR` is set (the Symfony 7.4 and 8 skeletons).
+`cyllene_digital_ai_translation.translation_files_cache` pool, keyed by their path and content: a
+file rewritten in place is read again at once. A new `symfony/translation` release that parses a
+file differently is only seen once the cached entry expires (seven days by default): empty the
+pool with `bin/console cache:pool:clear cyllene_digital_ai_translation.translation_files_cache`.
+`cache:clear` does not empty it when `APP_SHARE_DIR` is set (the Symfony 7.4 and 8 skeletons).
 
 An uploaded import waits for its confirmation, one hour at most, in the
 `cyllene_digital_sylius_ai_translation.import_staging` cache pool, built on `cache.app`. Behind a load

@@ -27,6 +27,15 @@
                         <code data-ait-admin-review-modal-target="key" class="small"></code>
                         <div class="text-secondary small" data-ait-admin-review-modal-target="catalogue"></div>
                     </div>
+                    {# A row the engine reserved before calling the provider: not a failure, though
+                       stored as one until the reply comes. #}
+                    <div data-ait-admin-review-modal-target="inFlight" class="alert alert-info mb-3 d-none">
+                        {{ ux_icon('tabler:clock') }}
+                        <div>
+                            <h4 class="alert-title">{{ 'cyllene_digital_sylius_ai_translation.ui.generation_in_flight'|trans }}</h4>
+                            <div class="text-secondary">{{ 'cyllene_digital_sylius_ai_translation.ui.generation_in_flight_help'|trans }}</div>
+                        </div>
+                    </div>
                     {# The provider failure that produced an errored row, shown above the value. #}
                     <div data-ait-admin-review-modal-target="error" class="alert alert-danger mb-3 d-none">
                         {{ ux_icon('tabler:alert-circle') }}

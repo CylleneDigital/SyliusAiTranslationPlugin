@@ -9,14 +9,10 @@
 The plugin left the guard against double billing to the engine
 ([0022](0022-double-billing-guard-is-the-engine.md)), while that guard was a behaviour the engine's
 public contract did not promise: a minor version of the engine could have changed it without
-notice. The engine has since written it into its public contract, as what a generation run
-guarantees: one run at a time per catalogue, target locale and scope; a key that has a pending
-suggestion, an errored one included, is not sent; the keys of a chunk are reserved before the
-provider is called, so a run started again does not send them; a run that retries errors leaves
-out the keys its own interrupted attempt reserved; in a run for the missing keys, a key given a
-value during the run is left out of the chunks that follow; no failed run is retried by
-Messenger; a run for a scope the host no longer declares is refused before the provider is
-called, and one whose scope goes while it runs stops before its next chunk.
+notice. The engine has since written that guard into its public contract, as what a generation
+run guarantees, which only changes in a major version: among others, one run at a time per
+catalogue, target locale and scope, the keys of a chunk reserved before the provider is called,
+and a run for a scope the host no longer declares refused, or stopped before its next chunk.
 
 ## Decision
 
@@ -37,24 +33,28 @@ run, and the run would go on billing chunks for nobody.
 - A "Retry errors" run re-sends the keys whose previous run failed, for as long as they fail,
   except the ones its own attempt reserved before being killed: started again, it does not bill
   them twice.
-- The keys reserved for a chunk are stored as errored suggestions until the reply comes: the
-  suggestions screen shows them apart from the provider failures, since a run in progress has
-  not failed.
+- The keys reserved for a chunk are stored as errored suggestions until the reply comes, or,
+  when the run was stopped during the call, until a "Retry errors" run sends them again: the
+  suggestions screen shows them apart from the provider failures.
 - A run queued for a channel deleted since bills nothing. A run whose channel is deleted while
   it runs stops before its next chunk; the chunk already with the provider is billed.
+- Outside a request, the channels are read again before a chunk once the short delay has passed:
+  about one query per chunk, next to a call to a paid provider.
+- A run executed inside a request - a host routing the engine's messages to a synchronous
+  transport - keeps the channels it read: a channel deleted meanwhile does not stop it.
 - A change of the guard is now a major version of the engine, which the plugin's constraint
   does not accept without a release of its own.
 - A lock in the plugin, or a single-use token in the session, would still duplicate the engine's
   guard without covering more.
 - The lock protects the bill only while its store answers, and only between the workers that
-  share it; when the store cannot be reached, the engine runs the generation unguarded. Duplicate
-  suggestions stay impossible, the database refuses them. These are deployment notes of the
-  engine, which documents them.
+  share it. These are deployment notes of the engine, which documents them.
 
 ## Related
 
 - [0001. Generation runs go through a dedicated bus, not `sylius.command_bus`](0001-generation-runs-on-a-dedicated-bus.md)
+- [0012. No file is written, nothing AI-generated is applied without a human](0012-nothing-written-to-files-nothing-applied-without-a-human.md)
 - [0013. Only the engine's public contract is used](0013-only-the-engine-public-contract.md)
 - [0016. No live tracking of a generation](0016-no-live-tracking-of-a-generation.md)
-- [0020. The channel code to name map is not cached](0020-channel-name-map-not-cached.md)
+- [0020. The channel code to name map is not cached](0020-channel-name-map-not-cached.md):
+  the channels it reads once per request are the ones kept only briefly outside one
 - [0023. A deleted channel keeps its overrides, suggestions and journal](0023-deleted-channel-keeps-its-translations.md)

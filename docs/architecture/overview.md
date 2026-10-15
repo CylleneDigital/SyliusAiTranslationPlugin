@@ -26,7 +26,7 @@ key are the engine's.
 | Path | Role |
 |---|---|
 | `Controller/Admin/` | One invokable controller per route, under `Translation/` and `Suggestion/`. `Screen` holds what the actions of a screen share: its CSRF intention, its flashes and the way back to its list. `Input/` holds the objects the requests are mapped to |
-| `Bridge/` | The Sylius adapters of the engine's host-facing interfaces: locales, author, channel scopes |
+| `Bridge/` | The Sylius adapters of the engine's host-facing interfaces: locales, author, channel scopes and their locales |
 | `Scope/` | Which channel a request works on (`ChannelScopeResolver`), and the channels read once per request, one second at most outside one (`ChannelRegistry`) |
 | `Grid/` | The two grids, the data provider of the catalogue one (its rows are computed, not entities), their filter choices and the bulk action renderer |
 | `View/` | The rows of the catalogue grid and of the export, built from the engine's data |
