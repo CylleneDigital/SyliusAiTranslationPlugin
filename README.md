@@ -32,7 +32,7 @@ per-channel context for the AI, under human review, always.
 | PHP | `^8.3` (Symfony 8: `^8.4`) |
 | Sylius | `2.1`, `2.2`, `2.3` |
 | Symfony | `^7.4`, or `^8.0` with Sylius 2.3 |
-| [`cyllene-digital/ai-translation-bundle`](https://packagist.org/packages/cyllene-digital/ai-translation-bundle) | `^1.0` |
+| [`cyllene-digital/ai-translation-bundle`](https://packagist.org/packages/cyllene-digital/ai-translation-bundle) | `^1.4.1` |
 
 In a Symfony 7.4 project, pin the stack with `extra.symfony.require: "7.4.*"` (standard Flex
 practice): without it Composer may mix Symfony 8 components (`symfony/var-exporter`…) into a
@@ -180,7 +180,15 @@ default store is local to one machine: workers spread over several hosts need a 
 generation unguarded: two concurrent runs are then billed twice. A key is billed again in two
 cases: its suggestion was reviewed in between and the run still covers it (a rejected one, or any
 key of an "All keys" run), or the run is a "Retry errors" one, which re-sends the keys whose
-previous run failed for as long as they fail.
+previous run failed for as long as they fail. A run for a channel deleted since it was queued
+bills nothing: the engine refuses it before calling the provider, and stops a run in progress
+before its next chunk, journaled as a failure.
+
+The engine keeps the translation files it parses in the
+`cyllene_digital_ai_translation.translation_files_cache` pool, keyed by their content: a file
+rewritten in place is read again at once. With `APP_SHARE_DIR` set (the Symfony 7.4 and 8
+skeletons), `cache:clear` leaves that pool as it is: empty it with
+`bin/console cache:pool:clear cyllene_digital_ai_translation.translation_files_cache`.
 
 An uploaded import waits for its confirmation, one hour at most, in the
 `cyllene_digital_sylius_ai_translation.import_staging` cache pool, built on `cache.app`. Behind a load

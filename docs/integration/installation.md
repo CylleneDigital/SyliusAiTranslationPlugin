@@ -12,7 +12,7 @@ Composer installs both, and the engine is configured under its own
 | PHP | `^8.3` (Symfony 8: `^8.4`), with `ext-intl` |
 | Sylius | `2.1`, `2.2`, `2.3` |
 | Symfony | `^7.4`, or `^8.0` with Sylius 2.3 |
-| Engine | `^1.0` |
+| Engine | `^1.4.1` |
 
 A Messenger worker is needed for AI generation, and a Webpack Encore build for the admin assets,
 as for the rest of a Sylius application.
@@ -103,6 +103,17 @@ The plugin dispatches the runs on its own bus (`cyllene_digital_ai_translation.b
 would roll back the suggestions already billed. If you dispatch `GenerateSuggestionsMessage`
 yourself, use that bus too
 ([decision record](../adr/0001-generation-runs-on-a-dedicated-bus.md)).
+
+## Clearing the caches
+
+The engine keeps the translation files it parses in the
+`cyllene_digital_ai_translation.translation_files_cache` pool, keyed by their content: a file
+rewritten in place is read again at once. With `APP_SHARE_DIR` set (the Symfony 7.4 and 8
+skeletons), `cache:clear` leaves that pool as it is:
+
+```bash
+bin/console cache:pool:clear cyllene_digital_ai_translation.translation_files_cache
+```
 
 ## Behind a load balancer
 

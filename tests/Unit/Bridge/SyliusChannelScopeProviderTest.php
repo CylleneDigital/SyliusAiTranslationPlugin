@@ -6,11 +6,14 @@ namespace Tests\CylleneDigital\SyliusAiTranslationPlugin\Unit\Bridge;
 
 use CylleneDigital\SyliusAiTranslationPlugin\Bridge\SyliusChannelScopeProvider;
 use CylleneDigital\SyliusAiTranslationPlugin\Scope\ChannelRegistry;
+use Doctrine\Common\Collections\ArrayCollection;
 use PHPUnit\Framework\TestCase;
 use Sylius\Component\Channel\Context\ChannelContextInterface;
 use Sylius\Component\Channel\Context\ChannelNotFoundException;
 use Sylius\Component\Channel\Model\ChannelInterface;
 use Sylius\Component\Channel\Repository\ChannelRepositoryInterface;
+use Sylius\Component\Core\Model\ChannelInterface as CoreChannelInterface;
+use Sylius\Component\Locale\Model\Locale;
 
 final class SyliusChannelScopeProviderTest extends TestCase
 {
@@ -38,6 +41,35 @@ final class SyliusChannelScopeProviderTest extends TestCase
         $context->method('getChannel')->willThrowException(new ChannelNotFoundException());
 
         self::assertNull($this->provider($context)->getScope());
+    }
+
+    public function testTheLocalesOfAScopeAreTheChannelsOwn(): void
+    {
+        $locales = [];
+
+        foreach (['en_US', 'fr_FR'] as $code) {
+            $locale = new Locale();
+            $locale->setCode($code);
+            $locales[] = $locale;
+        }
+
+        $channel = $this->createStub(CoreChannelInterface::class);
+        $channel->method('getCode')->willReturn('B2B');
+        $channel->method('getLocales')->willReturn(new ArrayCollection($locales));
+
+        $bare = $this->createStub(CoreChannelInterface::class);
+        $bare->method('getCode')->willReturn('BARE');
+        $bare->method('getLocales')->willReturn(new ArrayCollection());
+
+        $repository = $this->createStub(ChannelRepositoryInterface::class);
+        $repository->method('findAll')->willReturn([$channel, $bare]);
+
+        $provider = new SyliusChannelScopeProvider($this->createStub(ChannelContextInterface::class), new ChannelRegistry($repository));
+
+        self::assertSame(['en_US', 'fr_FR'], $provider->getScopeLocales('B2B'));
+        // No locale to go by, and an unknown channel: every locale, the engine checks the rest.
+        self::assertNull($provider->getScopeLocales('BARE'));
+        self::assertNull($provider->getScopeLocales('GONE'));
     }
 
     private function provider(ChannelContextInterface $context): SyliusChannelScopeProvider

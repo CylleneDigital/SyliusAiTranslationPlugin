@@ -26,6 +26,7 @@ final class EngineContractTest extends TestCase
         'Catalogue\\LocaleProviderInterface',
         'Override\\AuthorProviderInterface',
         'Override\\TranslationManagerInterface',
+        'Scope\\ScopeLocalesProviderInterface',
         'Scope\\ScopeProviderInterface',
         'Suggestion\\TranslationAiServiceInterface',
         // Services.

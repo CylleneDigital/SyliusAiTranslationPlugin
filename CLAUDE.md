@@ -16,7 +16,7 @@ This file only holds what reading the code will not tell you.
 The plugin targets Sylius 2.1, 2.2 and 2.3, Symfony 7.4 and 8 (8 with Sylius 2.3 only), PHP 8.3+.
 It is the Sylius back office of
 [`cyllene-digital/ai-translation-bundle`](https://github.com/CylleneDigital/AiTranslationBundle)
-(`^1.0`, from Packagist): the engine, its entities and its `cyllene_digital_ai_translation`
+(`^1.4.1`, from Packagist): the engine, its entities and its `cyllene_digital_ai_translation`
 configuration tree live there, not here.
 
 ## Where things live
@@ -100,10 +100,11 @@ the schema from the mapping (`database_setup: schema`), the MySQL and MariaDB jo
   has no use for (and may not reach): disabled via `sylius_twig_hooks` in the same config.
 - Never set `DATABASE_URL` in the environment before running the tests: an external env variable
   would override `.env.test(.local)` and run the tests against the wrong database.
-- The catalogue screen costs what the engine costs: for each page, every translation file of
-  the view is parsed again (the engine caches them per process, not across requests) and each
-  catalogue takes two queries (`getTranslationsForCatalogue()`). The lever is in the engine, not
-  in a plugin-side cache of its rows
+- The catalogue screen costs what the engine costs: the parsed translation files come from the
+  engine's `cyllene_digital_ai_translation.translation_files_cache` pool, the overrides of the
+  browsed locale from one grouped read for the whole view (`OverrideReader::getTranslationsForCatalogues()`),
+  plus one read per reference locale. The lever is in the engine, not in a plugin-side cache of
+  its rows
   ([0014](docs/adr/0014-no-plugin-side-cache-of-catalogue-rows.md)).
 - Front build (required by the functional tests: admin pages render the Webpack Encore
   entrypoints): in `vendor/sylius/test-application`, `yarn install && yarn build`. The test
@@ -193,7 +194,7 @@ file does.
   needs the real engine takes it from the container (`tests/Integration/`, `tests/Functional/`,
   with the `SyncsTestSchema` trait); one that does not stubs `TranslationManagerInterface`.
 - **No server-side lock on a generation in the plugin**: the guard against double billing is the
-  engine's ([0022](docs/adr/0022-double-billing-guard-is-the-engine.md)).
+  engine's, written into its public contract ([0024](docs/adr/0024-double-billing-guard-is-the-engines-contract.md)).
 - The public surface - the bundle class and its namespace, the admin routes, the Twig hooks and
   templates, the roles, the menu entry and the generation bus - only breaks in a major version,
   with an entry in `UPGRADE.md`.

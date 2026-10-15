@@ -27,7 +27,7 @@ controllers (one per route, public as any controller service) keep their class a
 |---|---|---|
 | `….bridge.locale_provider` | the locales the engine works on: Sylius' *Configuration › Locales* | re-alias the engine's `LocaleProviderInterface` |
 | `….bridge.author_provider` | who an override or a review is attributed to: the logged-in admin | re-alias the engine's `AuthorProviderInterface` |
-| `….bridge.channel_scope_provider` | the engine's scopes: the Sylius channels | re-alias the engine's `ScopeProviderInterface` |
+| `….bridge.channel_scope_provider` | the engine's scopes: the Sylius channels, and the locales each one offers | re-alias the engine's `ScopeProviderInterface` |
 | `….security.permission_voter` | the permissions, from the roles | decorate it, as any voter |
 
 To replace a `bridge` service - other locales than Sylius', another notion of scope than the
@@ -37,7 +37,9 @@ the plugin is typed on their classes.
 
 The locales of a scope are the one thing the screens read from the Sylius channels themselves,
 not from the scope provider: with scopes that are not channels, a scope offers every locale -
-and one whose code is also a channel's offers that channel's.
+and one whose code is also a channel's offers that channel's. The engine's import reads them from
+the scope provider: a replacement that implements `ScopeLocalesProviderInterface` too keeps it
+skipping an entry in a locale its scope does not offer.
 
 Every other service is internal: its class is `final`, the controllers and the grids are typed
 on it, and a decorator makes the page fail with a `TypeError`. Change what the screens do
@@ -89,7 +91,7 @@ of them about internals: a record promises nothing, only this page says what is 
 | Symfony | 7.4 and 8.x (8.x with PHP 8.4+ and Sylius 2.3 in CI) |
 | PHP | 8.3+ (CI: 8.3, 8.4, 8.5) |
 | Databases (CI) | MySQL 8.0 and 8.4, MariaDB 10.11 and 11.4, PostgreSQL 15, 16 and 17 |
-| Engine | `cyllene-digital/ai-translation-bundle` `^1.0` (CI: the newest and the oldest release) |
+| Engine | `cyllene-digital/ai-translation-bundle` `^1.4.1` (CI: the newest and the oldest release) |
 
 Support for a Sylius, Symfony or PHP version ends when it leaves the CI matrix. Report security
 flaws privately: [`SECURITY.md`](../../SECURITY.md).

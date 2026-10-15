@@ -6,6 +6,7 @@ namespace CylleneDigital\SyliusAiTranslationPlugin\View;
 
 use CylleneDigital\AiTranslationBundle\Catalogue\TranslationCatalogue;
 use CylleneDigital\AiTranslationBundle\Entity\TranslationOverride;
+use CylleneDigital\AiTranslationBundle\Override\OverrideReader;
 use CylleneDigital\AiTranslationBundle\Override\TranslationManagerInterface;
 
 /**
@@ -24,6 +25,7 @@ final readonly class TranslationViewFactory
 {
     public function __construct(
         private TranslationManagerInterface $translationManager,
+        private OverrideReader $overrides,
     ) {
     }
 
@@ -80,9 +82,16 @@ final readonly class TranslationViewFactory
             $localeOverrides[$other] = $this->translationManager->getEffectiveOverridesByCatalogue($other, $scope);
         }
 
+        // The browsed locale's entries, in two queries whatever the number of catalogues.
+        $targets = $this->overrides->getTranslationsForCatalogues(
+            array_map(static fn (TranslationCatalogue $catalogue): string => $catalogue->identifier, $catalogues),
+            $locale,
+            $scope,
+        );
+
         // The levels that ARE selected scope the union — all catalogues when none is.
         $entries = array_merge(...array_map(
-            fn (TranslationCatalogue $catalogue): array => $this->getCatalogueEntries($catalogue->identifier, $locale, $scope, $referenceOrder, $localeOverrides),
+            fn (TranslationCatalogue $catalogue): array => $this->getCatalogueEntries($catalogue->identifier, $targets[$catalogue->identifier] ?? [], $referenceOrder, $localeOverrides),
             $catalogues,
         ) ?: [[]]);
 
@@ -140,15 +149,14 @@ final readonly class TranslationViewFactory
      * untranslated ones, shown with the reference text (first locale in the cascade
      * holding it) so they can be translated by hand in place.
      *
+     * @param array<string, array{original: ?string, override: ?string, hasOverride: bool, inherited: ?string, inheritedFrom: array{locale: string, scope: string}|null}> $target the browsed locale's entries, key => entry
      * @param list<string> $referenceOrder the other locales, in reference-priority order
      * @param array<string, array<string, array<string, string>>> $localeOverrides locale => catalogue => key => effective value
      *
      * @return list<array{key: string, catalogue: string, original: ?string, override: ?string, hasOverride: bool, inherited: ?string, inheritedFrom: array{locale: string, scope: string}|null, reference: ?string, referenceLocale: ?string, missing: bool}>
      */
-    private function getCatalogueEntries(string $identifier, string $locale, string $scope, array $referenceOrder, array $localeOverrides): array
+    private function getCatalogueEntries(string $identifier, array $target, array $referenceOrder, array $localeOverrides): array
     {
-        $target = $this->translationManager->getTranslationsForCatalogue($identifier, $locale, $scope);
-
         /** @var array<string, array{0: string, 1: string}> $references key => [locale, effective value] — first source wins */
         $references = [];
 

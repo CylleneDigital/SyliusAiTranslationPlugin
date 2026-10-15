@@ -88,7 +88,8 @@ The catalogue browser is a **Sylius grid** over computed rows (`CatalogueGrid` +
 - **Import**: header button opening a **modal**: file field, a collapsible "Which format?"
   block with one example per format, "download a ready-to-fill template" links. The upload
   writes nothing: the dashboard shows a **preview card** (N overrides would be imported,
-  invalid entries skipped and **each named** (its row or trans-unit, its key and why),
+  invalid entries skipped and **each named** (its row or trans-unit, its key and why: a
+  locale the host does not know, or one its channel does not offer, a syntax error...),
   overrides removed when the imported value is the one the entry would show without them,
   already-up-to-date or empty values ignored, per-locale breakdown) to **confirm or
   cancel**; the skipped entries are listed again after the import. A new upload, refused or
@@ -143,7 +144,8 @@ so a channel-specific wording in the source language drives the suggestion.
   re-sends **only** the keys whose previous run failed: no other key, missing or not. A provider failure stores an **errored
   suggestion per unfulfilled key** (no value, confidence 0, the provider error on the
   row) and is journaled in `cyllene_translation_generation_log` without Messenger retry
-  (re-generating later is idempotent). The screen lists the **last ten runs** of the channel
+  (re-generating later is idempotent). A run whose channel is deleted before it starts, or while
+  it runs, sends nothing more to the provider and is journaled as a failure. The screen lists the **last ten runs** of the channel
   being browsed under the grid, failures included with their error: generation being
   asynchronous, that is where a run that produced nothing shows.
 - **Save-time syntax validation**: an override (hand edit, import) or an approved

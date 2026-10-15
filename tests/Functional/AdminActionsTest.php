@@ -346,6 +346,39 @@ final class AdminActionsTest extends WebTestCase
         self::assertNull($this->overrideRepository()->findOneByKey('app.dashboard', 'messages', 'fr_FR', self::BULK_TEST_CHANNEL));
     }
 
+    public function testAnImportSkipsARowInALocaleItsChannelDoesNotExpose(): void
+    {
+        /** @var EntityManagerInterface $entityManager */
+        $entityManager = self::getContainer()->get(EntityManagerInterface::class);
+        $this->createTestChannel($entityManager);
+
+        /** @var RepositoryInterface<ChannelInterface> $channels */
+        $channels = self::getContainer()->get('sylius.repository.channel');
+        /** @var RepositoryInterface<LocaleInterface> $locales */
+        $locales = self::getContainer()->get('sylius.repository.locale');
+        $channel = $channels->findOneBy(['code' => self::BULK_TEST_CHANNEL]);
+        $english = $locales->findOneBy(['code' => 'en_US']);
+        self::assertNotNull($channel);
+        self::assertNotNull($english);
+        $channel->addLocale($english);
+        $entityManager->flush();
+
+        $token = $this->transferToken();
+        $file = $this->csvUpload('overrides.csv', "locale,catalogue,translation_key,value,scope\nen_US,messages,app.dashboard,Cockpit," . self::BULK_TEST_CHANNEL . "\nfr_FR,messages,app.dashboard,Pilotage," . self::BULK_TEST_CHANNEL . "\n");
+
+        $this->client->request('POST', '/admin/translations/import', ['_token' => $token], ['file' => $file]);
+        $this->client->followRedirect();
+        self::assertStringContainsString(
+            \sprintf('row 3 — app.dashboard: scope "%s" does not expose locale "fr_FR"', self::BULK_TEST_CHANNEL),
+            html_entity_decode((string) $this->client->getResponse()->getContent()),
+        );
+
+        $this->client->request('POST', '/admin/translations/import/confirm', ['_token' => $token]);
+        self::assertResponseRedirects();
+        self::assertSame('Cockpit', $this->overrideRepository()->findOneByKey('app.dashboard', 'messages', 'en_US', self::BULK_TEST_CHANNEL)?->getValue());
+        self::assertNull($this->overrideRepository()->findOneByKey('app.dashboard', 'messages', 'fr_FR', self::BULK_TEST_CHANNEL));
+    }
+
     public function testGoingBackToAnInheritedOverrideIsNotCalledAReturnToTheFile(): void
     {
         /** @var EntityManagerInterface $entityManager */

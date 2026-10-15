@@ -71,7 +71,7 @@ final readonly class ManualOverrideEditor
 
             // Where the value comes from, not what it reads: an inherited override that says
             // what the file says is still the one the entry follows from now on.
-            $inherited = $this->translationManager->getTranslationsForCatalogue($catalogue, $locale, $scope)[$key]['inherited'] ?? null;
+            $inherited = $this->overrides->getInheritedValue($key, $catalogue, $locale, $scope);
 
             return new ManualEdit(ManualEditOutcome::Reverted, revertedToFile: null === $inherited);
         }

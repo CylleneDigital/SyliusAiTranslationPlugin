@@ -116,6 +116,20 @@ final class CatalogueRowsTest extends KernelTestCase
         self::assertFalse($byKey['app.welcome']['missing']);
     }
 
+    public function testEachCatalogueOfTheViewKeepsItsOwnOverrides(): void
+    {
+        /** @var TranslationManagerInterface $manager */
+        $manager = self::getContainer()->get(TranslationManagerInterface::class);
+        $manager->saveOverride('app.dashboard', 'messages', 'fr_FR', 'Tableau');
+        $manager->saveOverride('product.add_to_cart', 'shop/Product/messages', 'fr_FR', 'Au panier');
+
+        $rows = $this->rows()->get(['locale' => 'fr_FR'], '');
+        $overrides = array_column(array_filter($rows, static fn (array $row): bool => $row['hasOverride']), 'override', 'catalogue');
+
+        self::assertSame(['messages' => 'Tableau', 'shop/Product/messages' => 'Au panier'], $overrides);
+        self::assertSame('Ajouter au panier', array_column($rows, 'original', 'key')['product.add_to_cart']);
+    }
+
     public function testAnOrphanCatalogueOnlyShowsItsOwnOverrides(): void
     {
         /** @var TranslationManagerInterface $manager */

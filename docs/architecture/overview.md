@@ -45,7 +45,8 @@ key are the engine's.
 1. `Translation\IndexController` resolves the channel from `?scope=` and renders the page; the
    grid asks `CatalogueGridProvider` for its rows.
 2. `CatalogueRows` turns the filters into a selection and `TranslationViewFactory` reads the
-   engine: file values, overrides, inherited values and reference texts.
+   engine: file values, overrides, inherited values and reference texts, the overrides of every
+   catalogue of the view at once.
 3. A row opens the edit modal, filled from the `data-*` attributes of its trigger by a Stimulus
    controller.
 4. `Translation\SaveController` hands the value to `ManualOverrideEditor`, which decides: store an
@@ -69,7 +70,8 @@ key are the engine's.
    `GenerateSuggestionsMessage` per catalogue on `cyllene_digital_ai_translation.bus`. The form's
    button locks for 60 seconds in the browser (`assets/admin/js/generation-controller.js`); the
    server queues whatever it receives, the engine guarding the bill
-   ([why](../adr/0022-double-billing-guard-is-the-engine.md)).
+   ([why](../adr/0024-double-billing-guard-is-the-engines-contract.md)). A run for a channel
+   deleted since it was queued is refused by the engine before the provider is called.
 3. A worker runs the engine's handler: pending suggestions appear in the grid, and each run in the
    journal under it, failures included - the last ten of the channel
    (`Suggestion\IndexController::JOURNAL_LENGTH`).
