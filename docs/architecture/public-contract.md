@@ -38,8 +38,9 @@ the plugin is typed on their classes.
 The locales of a scope are the one thing the screens read from the Sylius channels themselves,
 not from the scope provider: with scopes that are not channels, a scope offers every locale -
 and one whose code is also a channel's offers that channel's. The engine's import reads them from
-the scope provider: a replacement that implements `ScopeLocalesProviderInterface` too keeps it
-skipping an entry in a locale its scope does not offer.
+the scope provider: a replacement, or a decorator, keeps that check only if it implements
+`ScopeLocalesProviderInterface` too - otherwise an import writes an entry in a locale its
+channel does not offer.
 
 Every other service is internal: its class is `final`, the controllers and the grids are typed
 on it, and a decorator makes the page fail with a `TypeError`. Change what the screens do

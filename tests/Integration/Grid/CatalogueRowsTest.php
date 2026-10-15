@@ -130,6 +130,27 @@ final class CatalogueRowsTest extends KernelTestCase
         self::assertSame('Ajouter au panier', array_column($rows, 'original', 'key')['product.add_to_cart']);
     }
 
+    public function testEachCatalogueOfAChannelViewInheritsItsOwnGlobalOverrides(): void
+    {
+        /** @var TranslationManagerInterface $manager */
+        $manager = self::getContainer()->get(TranslationManagerInterface::class);
+        // The same key in two catalogues: an entry must not take the other catalogue's value.
+        $manager->saveOverride('app.dashboard', 'messages', 'fr_FR', 'Tableau global');
+        $manager->saveOverride('app.dashboard', 'shop/Product/messages', 'fr_FR', 'Tableau produit');
+
+        $rows = array_filter(
+            $this->rows()->get(['locale' => 'fr_FR'], 'B2B_TEST'),
+            static fn (array $row): bool => 'app.dashboard' === $row['key'],
+        );
+
+        self::assertSame(
+            ['messages' => 'Tableau global', 'shop/Product/messages' => 'Tableau produit'],
+            array_column($rows, 'inherited', 'catalogue'),
+        );
+        self::assertSame([['locale' => 'fr_FR', 'scope' => ''], ['locale' => 'fr_FR', 'scope' => '']], array_column($rows, 'inheritedFrom'));
+        self::assertSame([false, false], array_column($rows, 'hasOverride'));
+    }
+
     public function testAnOrphanCatalogueOnlyShowsItsOwnOverrides(): void
     {
         /** @var TranslationManagerInterface $manager */

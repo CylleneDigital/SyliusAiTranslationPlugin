@@ -26,7 +26,7 @@ configuration tree live there, not here.
 | `src/Controller/Admin/` | One invokable controller per route, under `Translation/` and `Suggestion/`; `Screen` is what the actions of a screen share (CSRF intention, flashes, the way back to the list), `Input/` the objects their requests are mapped to |
 | `src/Override/ManualOverrideEditor.php` | The rules of a hand edit (unchanged, revert to the baseline, empty refusal, orphan refusal, syntax, placeholders), returned as a `ManualEdit`: the controller only words each outcome |
 | `src/Security/` | The permissions (`Permission`) and the voter granting them from the roles |
-| `src/Bridge/` | The Sylius adapters of the engine's host-facing interfaces: locales, admin author, channel scopes |
+| `src/Bridge/` | The Sylius adapters of the engine's host-facing interfaces: locales, admin author, channel scopes and their locales |
 | `src/Grid/` | Sylius grids built in PHP over the engine's data (`CatalogueGrid`, `SuggestionGrid`) and their rendering helpers |
 | `src/Scope/ChannelScopeResolver.php` | Which channel (or the global scope) a request works on |
 | `src/Transfer/` | Import staging: a file is previewed, then confirmed, before anything is written |
@@ -102,9 +102,10 @@ the schema from the mapping (`database_setup: schema`), the MySQL and MariaDB jo
   would override `.env.test(.local)` and run the tests against the wrong database.
 - The catalogue screen costs what the engine costs: the parsed translation files come from the
   engine's `cyllene_digital_ai_translation.translation_files_cache` pool, the overrides of the
-  browsed locale from one grouped read for the whole view (`OverrideReader::getTranslationsForCatalogues()`),
-  plus one read per reference locale. The lever is in the engine, not in a plugin-side cache of
-  its rows
+  browsed locale from one grouped read for the whole view
+  (`OverrideReader::getTranslationsForCatalogues()`), plus one read per reference locale
+  (`tests/Integration/View/TranslationViewFactoryTest.php` counts them). The lever is in the
+  engine, not in a plugin-side cache of its rows
   ([0014](docs/adr/0014-no-plugin-side-cache-of-catalogue-rows.md)).
 - Front build (required by the functional tests: admin pages render the Webpack Encore
   entrypoints): in `vendor/sylius/test-application`, `yarn install && yarn build`. The test
@@ -194,7 +195,10 @@ file does.
   needs the real engine takes it from the container (`tests/Integration/`, `tests/Functional/`,
   with the `SyncsTestSchema` trait); one that does not stubs `TranslationManagerInterface`.
 - **No server-side lock on a generation in the plugin**: the guard against double billing is the
-  engine's, written into its public contract ([0024](docs/adr/0024-double-billing-guard-is-the-engines-contract.md)).
+  engine's, written into its public contract
+  ([0024](docs/adr/0024-double-billing-guard-is-the-engines-contract.md)). It checks the channel
+  before each chunk: `ChannelRegistry` keeps the channels for a request, but one second at most
+  outside one (a worker, the console), or a channel deleted during a run would not stop it.
 - The public surface - the bundle class and its namespace, the admin routes, the Twig hooks and
   templates, the roles, the menu entry and the generation bus - only breaks in a major version,
   with an entry in `UPGRADE.md`.

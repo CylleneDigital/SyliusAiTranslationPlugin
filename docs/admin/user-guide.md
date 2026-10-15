@@ -89,7 +89,8 @@ The catalogue browser is a **Sylius grid** over computed rows (`CatalogueGrid` +
   block with one example per format, "download a ready-to-fill template" links. The upload
   writes nothing: the dashboard shows a **preview card** (N overrides would be imported,
   invalid entries skipped and **each named** (its row or trans-unit, its key and why: a
-  locale the host does not know, or one its channel does not offer, a syntax error...),
+  locale the host does not know or its channel does not offer, a value that breaks the
+  catalogue's syntax...),
   overrides removed when the imported value is the one the entry would show without them,
   already-up-to-date or empty values ignored, per-locale breakdown) to **confirm or
   cancel**; the skipped entries are listed again after the import. A new upload, refused or
@@ -144,8 +145,11 @@ so a channel-specific wording in the source language drives the suggestion.
   re-sends **only** the keys whose previous run failed: no other key, missing or not. A provider failure stores an **errored
   suggestion per unfulfilled key** (no value, confidence 0, the provider error on the
   row) and is journaled in `cyllene_translation_generation_log` without Messenger retry
-  (re-generating later is idempotent). A run whose channel is deleted before it starts, or while
-  it runs, sends nothing more to the provider and is journaled as a failure. The screen lists the **last ten runs** of the channel
+  (re-generating later is idempotent). A run queued for a channel deleted since is refused
+  before anything is sent to the provider: it leaves no journal entry, only an error in the
+  worker's log and the message on the failure transport when there is one. A run whose channel
+  is deleted while it runs stops before its next chunk, journaled as a failure. The screen
+  lists the **last ten runs** of the channel
   being browsed under the grid, failures included with their error: generation being
   asynchronous, that is where a run that produced nothing shows.
 - **Save-time syntax validation**: an override (hand edit, import) or an approved
@@ -165,7 +169,10 @@ so a channel-specific wording in the source language drives the suggestion.
   them, not read from what the generation stored), and a red
   **"Generation failed"** badge (full error on hover and in the review modal) on errored rows,
   whose value must be typed in before approval (the row's approve button is disabled, the bulk
-  skips them, the server refuses them)),
+  skips them, the server refuses them); a grey **"Sent to the provider"** one instead on the rows
+  the engine reserved before calling the provider: their run is waiting for the reply, or was
+  stopped while it did - they stay so, and "Retry errors" sends them again. The "Generation
+  failed" filter counts them too),
   target-locale badge, confidence badge (green `>= 90%`, orange `>= 70%`, red below,
   self-assessed by the LLMs), provider badge. Clicking the **source or proposal cell opens
   the review modal**.

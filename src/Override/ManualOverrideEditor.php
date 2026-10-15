@@ -42,7 +42,10 @@ final readonly class ManualOverrideEditor
         $value = '' === trim($value) ? '' : $value;
 
         $fileValue = $this->overrides->getFileValue($key, $catalogue, $locale);
-        $baseline = $this->overrides->getBaselineValue($key, $catalogue, $locale, $scope);
+        // Where the baseline comes from, not what it reads: an inherited override that says
+        // what the file says is still the one the entry follows once its own one is gone.
+        $inherited = $this->overrides->getInheritedValue($key, $catalogue, $locale, $scope);
+        $baseline = $inherited ?? $fileValue;
         $stored = $this->translationManager->getOverrideValue($key, $catalogue, $locale, $scope);
 
         if ('' === $value && null === $baseline) {
@@ -68,10 +71,6 @@ final readonly class ManualOverrideEditor
 
         if (OverrideChange::Revert === $change) {
             $this->translationManager->removeOverride($key, $catalogue, $locale, $scope);
-
-            // Where the value comes from, not what it reads: an inherited override that says
-            // what the file says is still the one the entry follows from now on.
-            $inherited = $this->overrides->getInheritedValue($key, $catalogue, $locale, $scope);
 
             return new ManualEdit(ManualEditOutcome::Reverted, revertedToFile: null === $inherited);
         }

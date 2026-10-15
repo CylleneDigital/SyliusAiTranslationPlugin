@@ -181,14 +181,16 @@ generation unguarded: two concurrent runs are then billed twice. A key is billed
 cases: its suggestion was reviewed in between and the run still covers it (a rejected one, or any
 key of an "All keys" run), or the run is a "Retry errors" one, which re-sends the keys whose
 previous run failed for as long as they fail. A run for a channel deleted since it was queued
-bills nothing: the engine refuses it before calling the provider, and stops a run in progress
-before its next chunk, journaled as a failure.
+bills nothing: the engine refuses it before calling the provider. A run whose channel is deleted
+while it runs stops before its next chunk, journaled as a failure: only the chunk already with
+the provider is billed.
 
 The engine keeps the translation files it parses in the
 `cyllene_digital_ai_translation.translation_files_cache` pool, keyed by their content: a file
-rewritten in place is read again at once. With `APP_SHARE_DIR` set (the Symfony 7.4 and 8
-skeletons), `cache:clear` leaves that pool as it is: empty it with
+rewritten in place is read again at once. After an upgrade of `symfony/translation`, the files
+already parsed stay as they were until they expire (seven days): empty the pool with
 `bin/console cache:pool:clear cyllene_digital_ai_translation.translation_files_cache`.
+`cache:clear` does not when `APP_SHARE_DIR` is set (the Symfony 7.4 and 8 skeletons).
 
 An uploaded import waits for its confirmation, one hour at most, in the
 `cyllene_digital_sylius_ai_translation.import_staging` cache pool, built on `cache.app`. Behind a load

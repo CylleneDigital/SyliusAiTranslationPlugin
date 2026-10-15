@@ -5,7 +5,14 @@
 {% set plural = review.pluralGaps(checks.pluralGaps) %}
 <a class="d-block text-reset text-decoration-none" {{ review.attributes(data, true) }}>
     <div class="text-truncate cyllene-translation-cell-truncate">{{ data.suggestedValue }}</div>
-    {% if data.generationError %}
+    {% if data.metadata.in_flight ?? null %}
+        {# A row the engine reserved before calling the provider: its run is still waiting for
+           the reply, or was stopped while it did. Not a provider failure. #}
+        <span class="badge bg-secondary-lt" title="{{ 'cyllene_digital_sylius_ai_translation.ui.generation_in_flight_help'|trans }}">
+            {{ ux_icon('tabler:clock') }}
+            {{ 'cyllene_digital_sylius_ai_translation.ui.generation_in_flight'|trans }}
+        </span>
+    {% elseif data.generationError %}
         {# The provider failure that produced this valueless row — full message on hover and in the modal. #}
         <span class="badge bg-danger text-white" title="{{ data.generationError }}">
             {{ ux_icon('tabler:alert-circle') }}

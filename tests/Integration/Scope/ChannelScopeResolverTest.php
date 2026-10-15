@@ -13,6 +13,7 @@ use Sylius\Component\Channel\Repository\ChannelRepositoryInterface;
 use Sylius\Component\Core\Model\ChannelInterface;
 use Sylius\Component\Locale\Model\LocaleInterface;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
+use Symfony\Component\Clock\MockClock;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Tests\CylleneDigital\SyliusAiTranslationPlugin\SyncsTestSchema;
@@ -162,6 +163,6 @@ final class ChannelScopeResolverTest extends KernelTestCase
         /** @var CoverageCalculator $calculator */
         $calculator = self::getContainer()->get(CoverageCalculator::class);
 
-        return new ChannelScopeResolver($manager, new ChannelRegistry($channelRepository), $calculator, $requestStack ?? new RequestStack());
+        return new ChannelScopeResolver($manager, new ChannelRegistry($channelRepository, $requestStack ??= new RequestStack(), new MockClock()), $calculator, $requestStack);
     }
 }

@@ -91,7 +91,7 @@ final readonly class TranslationViewFactory
 
         // The levels that ARE selected scope the union — all catalogues when none is.
         $entries = array_merge(...array_map(
-            fn (TranslationCatalogue $catalogue): array => $this->getCatalogueEntries($catalogue->identifier, $targets[$catalogue->identifier] ?? [], $referenceOrder, $localeOverrides),
+            fn (TranslationCatalogue $catalogue): array => $this->getCatalogueEntries($catalogue->identifier, $targets[$catalogue->identifier], $referenceOrder, $localeOverrides),
             $catalogues,
         ) ?: [[]]);
 

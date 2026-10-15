@@ -83,7 +83,7 @@ final class EngineContractTest extends TestCase
         ],
         'Entity\\TranslationSuggestion' => [
             null,
-            ['id', 'key', 'catalogue', 'locale', 'scope', 'sourceLocale', 'sourceValue', 'suggestedValue', 'generationError'],
+            ['id', 'key', 'catalogue', 'locale', 'scope', 'sourceLocale', 'sourceValue', 'suggestedValue', 'generationError', 'metadata'],
         ],
         'Estimation\\GenerationEstimate' => [
             ['Estimation\\GenerationCostEstimator', 'estimate'],

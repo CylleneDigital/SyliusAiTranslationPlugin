@@ -38,6 +38,8 @@ cyllene_digital_sylius_ai_translation:
         retry_errors: "Retry errors"
         retry_errors_help: "Re-sends only the keys whose previous generation failed — no other key, missing or not: their errored suggestions are refilled (value + confidence)."
         generation_failed: "Generation failed"
+        generation_in_flight: "Sent to the provider"
+        generation_in_flight_help: "Sent to the provider by a run that has not stored the reply yet. If that run was stopped meanwhile, the row stays so: \"Retry errors\" sends it again."
         generation_journal: "Last generations"
         generation_journal_date: "Date"
         generation_journal_result: "Result"

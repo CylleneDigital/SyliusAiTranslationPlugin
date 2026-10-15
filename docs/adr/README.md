@@ -36,6 +36,6 @@ Consequences, Related) and a line in the table below.
 | 0019 | [The labels of the syntax issues are not factored](0019-syntax-issue-labels-not-factored.md) |
 | 0020 | [The channel code to name map is not cached](0020-channel-name-map-not-cached.md) |
 | 0021 | [The `.gitignore` names the maintainers' local tooling](0021-gitignore-names-maintainers-tooling.md) |
-| 0022 | [The guard against double billing is the engine's](0022-double-billing-guard-is-the-engine.md) |
+| 0022 | [The guard against double billing is the engine's](0022-double-billing-guard-is-the-engine.md) (superseded by 0024) |
 | 0023 | [A deleted channel keeps its overrides, suggestions and journal](0023-deleted-channel-keeps-its-translations.md) |
 | 0024 | [The guard against double billing is the engine's, by its contract](0024-double-billing-guard-is-the-engines-contract.md) (supersedes 0022) |

@@ -38,6 +38,8 @@ cyllene_digital_sylius_ai_translation:
         retry_errors: "Réessayer les erreurs"
         retry_errors_help: "Ne renvoie que les clés dont la génération précédente a échoué — aucune autre, manquante ou non : leurs suggestions en erreur sont remplies (valeur + confiance)."
         generation_failed: "Génération en échec"
+        generation_in_flight: "Envoyée au fournisseur"
+        generation_in_flight_help: "Envoyée au fournisseur par une génération qui n'a pas encore enregistré la réponse. Si cette génération a été arrêtée entre-temps, la ligne reste ainsi : « Réessayer les erreurs » la renvoie."
         generation_journal: "Dernières générations"
         generation_journal_date: "Date"
         generation_journal_result: "Résultat"
