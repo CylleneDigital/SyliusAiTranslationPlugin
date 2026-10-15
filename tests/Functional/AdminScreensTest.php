@@ -335,6 +335,7 @@ final class AdminScreensTest extends WebTestCase
         self::assertNotCount(0, $crawler->filter('[data-suggestion-key="app.welcome"]'));
         self::assertCount(0, $crawler->filter('[data-suggestion-key="app.welcome"]:not([data-suggestion-in-flight="1"])'));
         self::assertNotCount(0, $crawler->filter('[data-suggestion-key="app.dashboard"][data-suggestion-in-flight="0"][data-suggestion-error="The provider answered 429"]'));
+        self::assertCount(1, $crawler->filter('#suggestion-review-modal [data-ait-admin-review-modal-target="inFlight"]'));
         $badges = static fn (string $label): int => $crawler->filter('span.badge')->reduce(static fn (Crawler $badge): bool => str_contains($badge->text(), $label))->count();
         self::assertSame(1, $badges('Sent to the provider'));
         self::assertSame(1, $badges('Generation failed'));

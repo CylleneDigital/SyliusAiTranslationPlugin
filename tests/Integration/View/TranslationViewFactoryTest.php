@@ -41,8 +41,6 @@ final class TranslationViewFactoryTest extends KernelTestCase
 
     public function testTheWholeProjectCostsWhatOneCatalogueCosts(): void
     {
-        // What a process reads once (the channels, the locales) is not what a view costs.
-        $this->entries();
         $oneCatalogue = $this->queries(fn () => $this->entries(type: 'messages', domain: 'Product'));
         $everyCatalogue = $this->queries(fn () => $this->entries());
 

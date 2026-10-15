@@ -48,7 +48,7 @@ cyllene_digital_sylius_ai_translation:
         syntax_icu_invalid: "pattern ICU invalide (accolade non fermée, pluriel mal formé…)"
         syntax_legacy_in_icu: "ce catalogue attend la syntaxe ICU — placeholders %…% détectés"
         syntax_icu_in_legacy: "ce catalogue attend la syntaxe legacy Symfony — construction ICU (plural/select) détectée"
-        generation_failed_filter_help: "« Oui » ne garde que les suggestions sans valeur à approuver : leur génération a échoué, ou elles ont été envoyées au fournisseur et la réponse n'est pas encore enregistrée ; « Non » les masque."
+        generation_failed_filter_help: "« Oui » ne garde que les suggestions dont la génération a échoué, ou qui ont été envoyées au fournisseur et dont la réponse n'est pas encore enregistrée ; « Non » les masque."
         suggestion_value_required_hint: "Pas de valeur à appliquer — ouvrez la relecture pour saisir la traduction."
         all_keys_help: "Par défaut, seules les clés sans traduction dans la langue cible sont envoyées à l'IA (compléter les trous). Cochez pour re-traduire aussi les clés déjà traduites — par ex. après un changement de contexte, de ton ou de fournisseur. Chaque proposition passe toujours par l'écran de revue, mais tout le catalogue est envoyé au fournisseur (quota / facturation)."
         source_locale_help: "Langue de référence : l'IA part des textes de cette langue (valeur effective : override du canal, sinon override global, sinon fichier). Préréglée sur la langue par défaut du canal, sinon sur la langue de référence de la couverture ; choisissez la langue la mieux rédigée, c'est elle qui donne le ton."

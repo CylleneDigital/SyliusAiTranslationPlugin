@@ -171,9 +171,9 @@ so a channel-specific wording in the source language drives the suggestion.
   whose value must be typed in before approval (the row's approve button is disabled, the bulk
   skips them, the server refuses them); a grey **"Sent to the provider"** one instead on the rows
   the engine reserved before calling the provider: their run is still waiting for the reply, or
-  was stopped while it waited - such a row stays so, its approve button disabled, until "Retry
-  errors" sends it again; the review modal says so in place of a failure. The "Generation
-  failed" filter keeps them too),
+  was stopped while it waited - such a row stays so until "Retry errors" sends it again, or a
+  reviewer types its value in the review modal or rejects it; the review modal says so in place
+  of a failure. The "Generation failed" filter keeps them too),
   target-locale badge, confidence badge (green `>= 90%`, orange `>= 70%`, red below,
   self-assessed by the LLMs), provider badge. Clicking the **source or proposal cell opens
   the review modal**.

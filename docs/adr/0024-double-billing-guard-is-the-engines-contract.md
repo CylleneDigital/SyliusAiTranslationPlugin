@@ -19,10 +19,10 @@ and a run for a scope the host no longer declares refused, or stopped before its
 The plugin still adds no server-side lock, and now relies on a promise of the engine rather than
 on its behaviour: its constraint only accepts engine releases that make that promise.
 
-The engine learns whether a channel still exists from the plugin, before each chunk. The plugin
-keeps its list of channels for a whole request, but only briefly outside one - a Messenger
-worker, the console: a list kept for the whole message would hide a channel deleted during the
-run, and the run would go on billing chunks for nobody.
+The engine learns whether a channel still exists from the plugin, when a run starts and before
+each chunk. The plugin keeps its list of channels for a whole request, but only briefly outside
+one - a Messenger worker, the console: a list kept for the whole message would hide a channel
+deleted during the run, and the run would go on billing chunks for nobody.
 
 ## Consequences
 
@@ -34,8 +34,9 @@ run, and the run would go on billing chunks for nobody.
   except the ones its own attempt reserved before being killed: started again, it does not bill
   them twice.
 - The keys reserved for a chunk are stored as errored suggestions until the reply comes, or,
-  when the run was stopped during the call, until a "Retry errors" run sends them again: the
-  suggestions screen shows them apart from the provider failures.
+  when the run was stopped during the call, until a "Retry errors" run sends them again or a
+  reviewer settles them by hand: the suggestions screen shows them apart from the provider
+  failures.
 - A run queued for a channel deleted since bills nothing. A run whose channel is deleted while
   it runs stops before its next chunk; the chunk already with the provider is billed.
 - Outside a request, the channels are read again before a chunk once the short delay has passed:

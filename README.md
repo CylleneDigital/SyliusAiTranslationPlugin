@@ -177,8 +177,8 @@ a review: the engine runs one generation at a time per catalogue, target locale 
 skips every key that already has a pending suggestion. That guard is a `symfony/lock` lock, whose
 default store is local to one machine: workers spread over several hosts need a shared store
 (`framework.lock`). When the store cannot be reached, the engine logs a warning and runs the
-generation unguarded: two concurrent runs can then both call the provider, the database stopping
-the one that reserves a key the other holds before it pays for that chunk. A key is billed again in two
+generation unguarded: two concurrent runs can then both call the provider; the database stops
+the one that reserves a key the other holds, before that run pays for its chunk. A key is billed again in two
 cases: its suggestion was reviewed in between and the run still covers it (a rejected one, or any
 key of an "All keys" run), or the run is a "Retry errors" one, which re-sends the keys whose
 previous run failed for as long as they fail. A run for a channel deleted since it was queued

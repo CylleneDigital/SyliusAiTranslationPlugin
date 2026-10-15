@@ -48,7 +48,7 @@ cyllene_digital_sylius_ai_translation:
         syntax_icu_invalid: "invalid ICU pattern (unclosed brace, malformed plural…)"
         syntax_legacy_in_icu: "this catalogue expects ICU syntax — %…% placeholders detected"
         syntax_icu_in_legacy: "this catalogue expects the legacy Symfony syntax — ICU construct (plural/select) detected"
-        generation_failed_filter_help: "\"Yes\" keeps only the suggestions without a value to approve: their generation failed, or they were sent to the provider and the reply is not stored yet; \"No\" hides them."
+        generation_failed_filter_help: "\"Yes\" keeps only the suggestions whose generation failed, or that were sent to the provider and whose reply is not stored yet; \"No\" hides them."
         suggestion_value_required_hint: "No value to apply — open the review to type the translation."
         all_keys_help: "By default, only the keys with no translation in the target locale are sent to the AI (fill the gaps). Tick to also re-translate the keys that already have a value — e.g. after changing the context, the tone or the provider. Every proposal still goes through the review screen, but the whole catalogue is sent to the provider (quota / billing)."
         source_locale_help: "Reference language: the AI starts from this language's texts (effective value: channel override, else global override, else file). Preset on the channel's default language, else on the coverage reference; pick the best-written language, it sets the tone."
