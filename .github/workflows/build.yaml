@@ -132,7 +132,8 @@ jobs:
                     cache_restore_key: "${{ runner.os }}-php-${{ matrix.php }}-composer-"
                     database: "${{ matrix.database }}"
                     database_setup: "${{ matrix.database_setup || 'migrations' }}"
-                    node_version: "22.x"
+                    # Empty on Sylius 2.1: the action then skips the front-end build, done below.
+                    node_version: "${{ matrix.sylius != '~2.1.0' && '22.x' || '' }}"
                     php_version: "${{ matrix.php }}"
                     php_coverage: "${{ matrix.coverage || 'none' }}"
                     sylius_version: "${{ matrix.sylius }}"
@@ -142,6 +143,32 @@ jobs:
                     # The PHP-FPM worker behind `symfony server:start` can segfault at random under
                     # OPcache (Behat then gets a 502): Behat does not need it.
                     opcache_enable: "no"
+
+            # webpack 5.112.0 moved the internals that the Stimulus bridge of Sylius 2.1's test
+            # application loads ("Cannot find module 'webpack/lib/dependencies/LoaderDependency'"),
+            # and that application has no lock file: webpack is held below 5.112 there. Remove
+            # once a webpack release loads it again.
+            -
+                name: Setup Node before Sylius 2.2
+                if: matrix.sylius == '~2.1.0'
+                uses: actions/setup-node@v4
+                with:
+                    node-version: "22.x"
+
+            -
+                name: Build the front end with webpack below 5.112 before Sylius 2.2
+                if: matrix.sylius == '~2.1.0'
+                working-directory: "${{ env.test_dir }}"
+                # A resolution, not a direct dependency: one would hoist webpack away from the
+                # CLI Encore runs it with. Written in package.json.dist too: the test
+                # application's preinstall script rebuilds package.json from it.
+                run: |
+                    for file in package.json package.json.dist; do
+                        node -e 'const fs = require("fs"); const file = process.argv[1]; const pkg = JSON.parse(fs.readFileSync(file, "utf8")); pkg.resolutions = { ...pkg.resolutions, webpack: "~5.111.0" }; fs.writeFileSync(file, JSON.stringify(pkg, null, 4));' "$file"
+                    done
+                    yarn install
+                    yarn list --pattern webpack --depth=0
+                    yarn build
 
             -
                 name: Validate composer.json
