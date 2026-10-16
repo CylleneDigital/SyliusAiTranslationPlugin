@@ -108,6 +108,21 @@ Keep that transport asynchronous: a run is stopped before its next chunk when it
 deleted meanwhile, which a run executed inside the admin's request, on a synchronous transport,
 does not see ([decision record](../adr/0024-double-billing-guard-is-the-engines-contract.md)).
 
+## A deleted channel
+
+Deleting a channel from the admin purges what the engine stores for it - its overrides, its
+suggestions and its prompt context - once Sylius has committed the deletion; the generation
+journal stays. A purge that fails is logged, and the deletion goes through. A channel deleted
+another way (a script, an API, SQL), or before the plugin purged deleted channels, keeps its rows until the
+engine's command purges them; without `--force`, it only lists them:
+
+```bash
+bin/console cyllene:ai-translation:purge-scopes
+bin/console cyllene:ai-translation:purge-scopes --force
+```
+
+([decision record](../adr/0025-a-deleted-channel-takes-its-translations-along.md))
+
 ## The parsed translation files
 
 The engine keeps the translation files it parses in the

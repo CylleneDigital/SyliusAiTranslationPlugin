@@ -200,13 +200,18 @@ file does.
   channel when a run starts and before each chunk: `ChannelRegistry` keeps the channels for a
   whole request, but one second at most outside one (a worker, the console), or a channel
   deleted during a run would not stop it.
+- **A deleted channel is purged on `sylius.channel.post_delete`**, never on `pre_delete` nor in a
+  Doctrine listener: `ChannelDeletionListener` calls the engine's `ScopePurger` once Sylius has
+  committed the deletion (overrides, suggestions, prompt context; the journal stays), and logs a
+  purge that fails instead of throwing; `cyllene:ai-translation:purge-scopes` catches what it
+  missed ([0025](docs/adr/0025-a-deleted-channel-takes-its-translations-along.md)).
 - The public surface - the bundle class and its namespace, the admin routes, the Twig hooks and
   templates, the roles, the menu entry and the generation bus - only breaks in a major version,
   with an entry in `UPGRADE.md`.
 
 What was left as it is on purpose - no API, no live tracking of a generation, `pending_count`, the
 bulk action renderer decorator, the duplicated syntax labels, the uncached channel map, the
-`.gitignore`, the data of a deleted channel - is in the records 0015 to 0023: read them before
+`.gitignore` - is in the records 0015 to 0021: read them before
 "fixing" one.
 
 ## Keeping the docs in step

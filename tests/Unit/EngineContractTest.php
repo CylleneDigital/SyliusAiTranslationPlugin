@@ -37,6 +37,7 @@ final class EngineContractTest extends TestCase
         'Provider\\TranslationProviderRegistry',
         'Repository\\TranslationSuggestionRepository',
         'Scope\\ScopeParametersManager',
+        'Scope\\ScopePurger',
         'Suggestion\\PlaceholderConsistencyChecker',
         'Transfer\\OverrideExporter',
         'Transfer\\OverrideImporter',

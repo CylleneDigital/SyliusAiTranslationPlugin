@@ -26,7 +26,12 @@ global `llm_context` of the configuration. It has no effect on global generation
 other channels, is never translated itself, and is sent to LLM providers as an instruction
 and to DeepL as its steering `context`. The cost estimate of the Suggestions screen
 includes it. Stored by the engine in its per-scope settings table (scope = channel code):
-the host's `Channel` entity is not touched, and deleting a channel deletes its settings.
+the host's `Channel` entity is not touched.
+
+Deleting a channel deletes what the plugin stores for it: its overrides, its suggestions and
+this context; the journal of its generations stays. It does not come back: export the channel's
+view first to keep a copy. A channel Sylius refuses to delete (the last enabled one, one still in
+use) keeps everything.
 
 ## Translations › Catalogue (`/admin/translations`)
 

@@ -186,6 +186,12 @@ bills nothing: the engine refuses it before calling the provider. A run whose ch
 while it runs stops before its next chunk, journaled as a failure: only the chunk already with
 the provider is billed.
 
+Deleting a channel from the admin purges its overrides, suggestions and prompt context, once the
+deletion is committed; the journal of its generations stays. A channel deleted another way (a
+script, an API) keeps them until `bin/console cyllene:ai-translation:purge-scopes --force`, which
+also clears what channels deleted before the plugin purged them left behind: run it without `--force` to list
+them first.
+
 The engine keeps the translation files it parses in the
 `cyllene_digital_ai_translation.translation_files_cache` pool, keyed by their path and content: a
 file rewritten in place is read again at once. A new `symfony/translation` release that parses a

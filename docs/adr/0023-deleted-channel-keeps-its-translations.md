@@ -1,6 +1,6 @@
 # 0023. A deleted channel keeps its overrides, suggestions and journal
 
-- Status: accepted
+- Status: superseded by [0025](0025-a-deleted-channel-takes-its-translations-along.md)
 - Date: 2026-10-13
 
 ## Context

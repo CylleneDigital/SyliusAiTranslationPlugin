@@ -4,9 +4,14 @@ declare(strict_types=1);
 
 namespace Tests\CylleneDigital\SyliusAiTranslationPlugin\Integration\EventListener;
 
+use CylleneDigital\AiTranslationBundle\Entity\GenerationLog;
+use CylleneDigital\AiTranslationBundle\Entity\TranslationSuggestion;
+use CylleneDigital\AiTranslationBundle\Override\TranslationManagerInterface;
 use CylleneDigital\AiTranslationBundle\Scope\ScopeParametersManager;
+use CylleneDigital\AiTranslationBundle\Scope\ScopePurger;
 use CylleneDigital\SyliusAiTranslationPlugin\EventListener\ChannelDeletionListener;
 use Doctrine\ORM\EntityManagerInterface;
+use Psr\Log\AbstractLogger;
 use Sylius\Bundle\ResourceBundle\Event\ResourceControllerEvent;
 use Sylius\Component\Core\Model\ChannelInterface;
 use Sylius\Component\Currency\Model\CurrencyInterface;
@@ -18,10 +23,10 @@ use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 use Tests\CylleneDigital\SyliusAiTranslationPlugin\SyncsTestSchema;
 
 /**
- * The channel deletion listener: a deleted channel takes its per-scope settings
- * (the AI prompt context) with it, staged on `sylius.channel.pre_delete` and flushed
- * with the deletion. The event is dispatched the way Sylius' channel resource
- * controller dispatches it (subject = the channel being deleted).
+ * The channel deletion listener: once Sylius has deleted a channel, the engine's data for
+ * it goes too - overrides, suggestions, prompt context - and its journal stays. The event
+ * is dispatched the way Sylius' channel resource controller dispatches it, after the
+ * deletion is flushed (subject = the deleted channel).
  */
 final class ChannelDeletionListenerTest extends KernelTestCase
 {
@@ -49,49 +54,88 @@ final class ChannelDeletionListenerTest extends KernelTestCase
 
         /** @var EntityManagerInterface $entityManager */
         $entityManager = self::getContainer()->get(EntityManagerInterface::class);
-        $entityManager->getConnection()->executeStatement('DELETE FROM cyllene_translation_scope_parameters WHERE scope = ?', [self::CHANNEL_CODE]);
-        $entityManager->getConnection()->executeStatement('DELETE FROM sylius_channel WHERE code IN (?, ?)', [self::CHANNEL_CODE, self::OTHER_CHANNEL_CODE]);
+        $connection = $entityManager->getConnection();
+        $scopes = [self::CHANNEL_CODE, self::OTHER_CHANNEL_CODE];
+        $connection->executeStatement('DELETE FROM cyllene_translation_scope_parameters WHERE scope IN (?, ?)', $scopes);
+        $connection->executeStatement('DELETE FROM cyllene_translation_override WHERE scope IN (?, ?)', $scopes);
+        $connection->executeStatement('DELETE FROM cyllene_translation_suggestion WHERE scope IN (?, ?)', $scopes);
+        $connection->executeStatement('DELETE FROM cyllene_translation_generation_log WHERE scope IN (?, ?)', $scopes);
+        $connection->executeStatement('DELETE FROM sylius_channel WHERE code IN (?, ?)', $scopes);
 
         self::ensureKernelShutdown();
     }
 
-    public function testThePreDeleteEventRemovesTheChannelScopeSettings(): void
+    public function testADeletedChannelTakesItsDataAlongAndKeepsItsJournal(): void
     {
         $container = self::getContainer();
 
         /** @var EntityManagerInterface $entityManager */
         $entityManager = $container->get(EntityManagerInterface::class);
 
-        // Sylius' own pre_delete listener stops the event for the last enabled channel
-        // (the deletion is refused, the settings rightly stay): a second one makes the
-        // test channel deletable, as on any real shop with several channels.
         $channel = $this->createChannel(self::CHANNEL_CODE, 'Deletion test');
         $this->createChannel(self::OTHER_CHANNEL_CODE, 'Deletion test (other)');
+
+        /** @var TranslationManagerInterface $translationManager */
+        $translationManager = $container->get(TranslationManagerInterface::class);
+        $translationManager->saveOverride('app.welcome', 'messages', 'fr_FR', 'Bienvenue (canal)', null, self::CHANNEL_CODE);
+        $translationManager->saveOverride('app.welcome', 'messages', 'fr_FR', 'Bienvenue (autre canal)', null, self::OTHER_CHANNEL_CODE);
 
         /** @var ScopeParametersManager $scopeParameters */
         $scopeParameters = $container->get(ScopeParametersManager::class);
         $scopeParameters->setPromptContext(self::CHANNEL_CODE, 'Terse wording for the test channel.');
-        self::assertSame('Terse wording for the test channel.', $scopeParameters->getPromptContext(self::CHANNEL_CODE));
+
+        $entityManager->persist(new TranslationSuggestion('app.dashboard', 'messages', 'fr_FR', 'Tableau de bord', 'Dashboard', 'en_US', 'stub', 0.9, self::CHANNEL_CODE));
+        $entityManager->persist(GenerationLog::success('messages', 'fr_FR', 'en_US', 'stub', 1, self::CHANNEL_CODE));
+        $entityManager->flush();
+
+        // As Sylius' resource controller does it: the deletion is flushed, then post_delete.
+        /** @var RepositoryInterface<ChannelInterface> $channelRepository */
+        $channelRepository = $container->get('sylius.repository.channel');
+        $channelRepository->remove($channel);
 
         /** @var EventDispatcherInterface $dispatcher */
         $dispatcher = $container->get('event_dispatcher');
-        $dispatcher->dispatch(new ResourceControllerEvent($channel), 'sylius.channel.pre_delete');
-
-        // The removal is staged (flush: false) and lands with the deletion itself.
-        $entityManager->flush();
+        $dispatcher->dispatch(new ResourceControllerEvent($channel), 'sylius.channel.post_delete');
         $entityManager->clear();
 
+        $connection = $entityManager->getConnection();
+        self::assertNull($translationManager->getOverrideValue('app.welcome', 'messages', 'fr_FR', self::CHANNEL_CODE));
         self::assertNull($scopeParameters->getPromptContext(self::CHANNEL_CODE));
-        self::assertCount(0, $entityManager->getConnection()->fetchFirstColumn('SELECT 1 FROM cyllene_translation_scope_parameters WHERE scope = ?', [self::CHANNEL_CODE]));
+        self::assertCount(0, $connection->fetchFirstColumn('SELECT 1 FROM cyllene_translation_suggestion WHERE scope = ?', [self::CHANNEL_CODE]));
+        self::assertCount(1, $connection->fetchFirstColumn('SELECT 1 FROM cyllene_translation_generation_log WHERE scope = ?', [self::CHANNEL_CODE]));
+
+        self::assertSame('Bienvenue (autre canal)', $translationManager->getOverrideValue('app.welcome', 'messages', 'fr_FR', self::OTHER_CHANNEL_CODE));
+    }
+
+    public function testAPurgeThatFailsIsLoggedAndLeavesTheDeletionAlone(): void
+    {
+        /** @var ScopePurger $scopePurger */
+        $scopePurger = self::getContainer()->get(ScopePurger::class);
+        $logger = new class() extends AbstractLogger {
+            /** @var list<string> */
+            public array $errors = [];
+
+            public function log($level, \Stringable|string $message, array $context = []): void
+            {
+                $this->errors[] = (\is_string($level) ? $level : '?') . ': ' . $message;
+            }
+        };
+
+        /** @var FactoryInterface<ChannelInterface> $channelFactory */
+        $channelFactory = self::getContainer()->get('sylius.factory.channel');
+        $channel = $channelFactory->createNew();
+        // The engine refuses to purge the global scope '': the one failure a test can cause.
+        $channel->setCode('');
+
+        (new ChannelDeletionListener($scopePurger, $logger))(new ResourceControllerEvent($channel));
+
+        self::assertCount(1, $logger->errors);
+        self::assertStringStartsWith('error: ', $logger->errors[0]);
     }
 
     public function testTheListenerIgnoresSubjectsItCannotHandle(): void
     {
         $container = self::getContainer();
-
-        /** @var EntityManagerInterface $entityManager */
-        $entityManager = $container->get(EntityManagerInterface::class);
-        $entityManager->getConnection()->executeStatement('DELETE FROM cyllene_translation_scope_parameters');
 
         /** @var ChannelDeletionListener $listener */
         $listener = $container->get('cyllene_digital_sylius_ai_translation.scope.channel_deletion_listener');
@@ -102,9 +146,8 @@ final class ChannelDeletionListenerTest extends KernelTestCase
         /** @var FactoryInterface<ChannelInterface> $channelFactory */
         $channelFactory = $container->get('sylius.factory.channel');
         $listener(new ResourceControllerEvent($channelFactory->createNew()));
-        $entityManager->flush();
 
-        self::assertCount(0, $entityManager->getConnection()->fetchFirstColumn('SELECT 1 FROM cyllene_translation_scope_parameters'));
+        $this->addToAssertionCount(1);
     }
 
     private function createChannel(string $code, string $name): ChannelInterface

@@ -58,4 +58,4 @@ deleted during the run, and the run would go on billing chunks for nobody.
 - [0016. No live tracking of a generation](0016-no-live-tracking-of-a-generation.md)
 - [0020. The channel code to name map is not cached](0020-channel-name-map-not-cached.md):
   the channels it reads once per request are the ones kept only briefly outside one
-- [0023. A deleted channel keeps its overrides, suggestions and journal](0023-deleted-channel-keeps-its-translations.md)
+- [0025. A deleted channel takes its overrides and suggestions along, its journal stays](0025-a-deleted-channel-takes-its-translations-along.md)
