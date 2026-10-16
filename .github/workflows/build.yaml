@@ -160,10 +160,14 @@ jobs:
                 if: matrix.sylius == '~2.1.0'
                 working-directory: "${{ env.test_dir }}"
                 # A resolution, not a direct dependency: one would hoist webpack away from the
-                # CLI Encore runs it with.
+                # CLI Encore runs it with. Written in package.json.dist too: the test
+                # application's preinstall script rebuilds package.json from it.
                 run: |
-                    npm pkg set "resolutions.webpack=~5.111.0"
+                    for file in package.json package.json.dist; do
+                        node -e 'const fs = require("fs"); const file = process.argv[1]; const pkg = JSON.parse(fs.readFileSync(file, "utf8")); pkg.resolutions = { ...pkg.resolutions, webpack: "~5.111.0" }; fs.writeFileSync(file, JSON.stringify(pkg, null, 4));' "$file"
+                    done
                     yarn install
+                    yarn list --pattern webpack --depth=0
                     yarn build
 
             -
