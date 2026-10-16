@@ -101,7 +101,7 @@ final class TranslationContext implements Context
         $source = $this->translationManager->getOriginalValue($key, $catalogue, 'en_US') ?? $key;
 
         $suggestion = TranslationSuggestion::failed($key, $catalogue, $locale, $source, 'en_US', 'stub', 'Interrupted before the reply was stored');
-        $suggestion->setMetadata(['in_flight' => (new \DateTimeImmutable())->format(\DATE_ATOM)]);
+        $suggestion->setMetadata(['in_flight' => (new \DateTimeImmutable())->format('Y-m-d\TH:i:s.uP')]);
         $this->entityManager->persist($suggestion);
         $this->entityManager->flush();
     }

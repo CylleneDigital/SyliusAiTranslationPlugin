@@ -24,12 +24,12 @@ Sylius dispatches after the deletion is committed: never before it, since a dele
 refuses (the last enabled channel, a channel still in use) must lose nothing, nor inside its
 flush, whose rollback would follow an announced purge.
 
-A purge that fails is logged, and does not turn a deletion that happened into an error page. A
+A purge that fails is logged, and does not turn a single deletion that happened into an error page. A
 channel deleted without Sylius' resource controller (a script, Sylius' API, SQL) is not purged
 at all. The engine's command purges what either case left behind.
 
-The purge runs after the host's own listeners of that event: a purge that fails leaves the entity
-manager they share closed.
+The purge runs after the host's own listeners of that event: a purge that fails during its flush
+leaves the entity manager they share closed.
 
 ## Consequences
 
@@ -44,8 +44,8 @@ manager they share closed.
 - Whoever may delete a channel in Sylius deletes its translation work, without any permission of
   the plugin: the deletion is Sylius' decision, the purge only follows it.
 - A channel with many overrides is purged inside the deletion request, one removal announced per
-  override; in a bulk deletion, a purge that fails stops the deletion of the channels after it,
-  the entity manager being closed.
+  override; in a bulk deletion, a purge that fails during its flush stops the deletion of the
+  channels after it with an error page, the entity manager being closed.
 - The prompt context goes with the purge, after the deletion, instead of being staged with it.
 - The rows a channel deleted before this decision left are only purged by the engine's command.
 

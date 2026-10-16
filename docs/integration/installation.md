@@ -105,17 +105,24 @@ yourself, use that bus too
 ([decision record](../adr/0001-generation-runs-on-a-dedicated-bus.md)).
 
 Keep that transport asynchronous: a run stops before its next chunk when its channel is deleted
-meanwhile, but a run executed inside a request (a synchronous transport) keeps the channels it read
-when the request started, and does not see the deletion ([decision record](../adr/0024-double-billing-guard-is-the-engines-contract.md)).
+meanwhile, but a run executed inside a request (a synchronous transport) keeps the channels as it
+first read them in that request: it does not see the deletion, and goes on billing its next
+chunks, stored under the deleted code ([decision record](../adr/0024-double-billing-guard-is-the-engines-contract.md)).
 
 ## A deleted channel
 
 Deleting a channel from the admin purges what the engine stores for it - its overrides, its
 suggestions and its prompt context - once Sylius has committed the deletion; the generation
-journal stays. A purge that fails is logged, and the deletion goes through; in a bulk deletion,
-the channels after it are not deleted (Sylius says so in a flash). A channel deleted another way
-(a script, Sylius' API, SQL), or deleted before this version of the plugin, keeps its rows until
-the engine's command purges them; without `--force`, it only lists them:
+journal stays. A purge that fails is logged, and the deletion goes through. In a bulk deletion, a
+purge that fails during its flush closes the entity manager: the channels after it are not
+deleted, and the admin gets an error page. A run with the provider when its channel is deleted
+can still leave errored suggestions under the code, if the provider fails.
+
+What a failed purge or such a run leaves, and what a channel deleted another way (a script,
+Sylius' API, SQL) or with plugin 1.0.x keeps, stays until the engine's command purges it - as long
+as no channel is created again under the code: the command only sees the codes no channel uses
+any more, and a new channel under that code finds those rows. Without `--force`, it only lists
+them:
 
 ```bash
 bin/console cyllene:ai-translation:purge-scopes
@@ -124,8 +131,8 @@ bin/console cyllene:ai-translation:purge-scopes --force
 
 The purge runs inside the deletion request, one `OverrideRemovedEvent` per override: for a channel
 with tens of thousands of overrides, or a costly listener of that event (a reverse proxy purge),
-it can outlast the proxy's timeout. The admin then sees an error page while the channel is deleted,
-and the command purges what is left.
+it can outlast the proxy's timeout. The admin then sees an error page while the channel is deleted;
+the purge either completes or is rolled back as a whole, and the command purges whatever is left.
 ([decision record](../adr/0025-a-deleted-channel-takes-its-translations-along.md))
 
 ## The parsed translation files

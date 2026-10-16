@@ -187,13 +187,15 @@ while it runs stops before its next chunk, journaled as a failure: only the chun
 the provider is billed.
 
 Deleting a channel from the admin purges its overrides, suggestions and prompt context, once the
-deletion is committed; the journal of its generations stays. A channel deleted another way (a
-script, Sylius' API, SQL) keeps them until `bin/console cyllene:ai-translation:purge-scopes --force`,
-which also clears the rows of channels deleted before this version of the plugin: run it without
-`--force` to list them first.
+deletion is committed; the journal of its generations stays. A purge that fails is logged; what it
+left, and what a channel deleted another way (a script, Sylius' API, SQL) or with plugin 1.0.x
+keeps, is purged by `bin/console cyllene:ai-translation:purge-scopes --force` (without `--force`,
+it only lists them). The command only sees the codes no channel uses any more: a channel created
+again under the code finds those rows.
 
 Keep the `cyllene_ai_translation` transport asynchronous: a run executed inside a request keeps the
-channels it read when the request started, and does not stop when its channel is deleted.
+channels as it first read them in that request, does not stop when its channel is deleted, and
+goes on billing its next chunks, stored under the deleted code.
 
 The engine keeps the translation files it parses in the
 `cyllene_digital_ai_translation.translation_files_cache` pool, keyed by their path and content: a

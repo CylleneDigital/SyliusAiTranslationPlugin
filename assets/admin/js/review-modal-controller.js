@@ -51,8 +51,9 @@ export default class extends Controller {
         this.currentOriginTarget.textContent = suggestion.suggestionCurrentOrigin;
 
         // A reserved row carries the engine's "interrupted" error while its run still waits.
-        // The target came after the template: a host's override of it may not have it.
-        const inFlight = suggestion.suggestionInFlight === '1';
+        // The target came after the template: a host's override of it may not have it, and
+        // then shows the row's error as before rather than nothing.
+        const inFlight = this.hasInFlightTarget && suggestion.suggestionInFlight === '1';
         if (this.hasInFlightTarget) {
             this.inFlightTarget.classList.toggle('d-none', !inFlight);
         }

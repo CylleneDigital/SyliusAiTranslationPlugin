@@ -108,6 +108,27 @@ final class ChannelDeletionListenerTest extends KernelTestCase
         self::assertSame('Bienvenue (autre canal)', $translationManager->getOverrideValue('app.welcome', 'messages', 'fr_FR', self::OTHER_CHANNEL_CODE));
     }
 
+    public function testThePurgeRunsAfterTheHostsOwnListeners(): void
+    {
+        /** @var \Symfony\Component\EventDispatcher\EventDispatcherInterface $dispatcher */
+        $dispatcher = self::getContainer()->get('event_dispatcher');
+        $plugin = self::getContainer()->get('cyllene_digital_sylius_ai_translation.scope.channel_deletion_listener');
+        $priorities = ['plugin' => [], 'other' => []];
+
+        foreach ($dispatcher->getListeners('sylius.channel.post_delete') as $listener) {
+            $isPlugin = $listener === $plugin || (\is_array($listener) && $listener[0] === $plugin);
+            $priorities[$isPlugin ? 'plugin' : 'other'][] = $dispatcher->getListenerPriority('sylius.channel.post_delete', $listener);
+        }
+
+        // Sylius' own listener of that event flushes: a purge that fails must not close the
+        // entity manager before it.
+        self::assertSame([-1024], $priorities['plugin']);
+        self::assertNotSame([], $priorities['other']);
+        foreach ($priorities['other'] as $priority) {
+            self::assertGreaterThan(-1024, $priority);
+        }
+    }
+
     public function testAPurgeThatFailsIsLoggedAndLeavesTheDeletionAlone(): void
     {
         $logger = self::spyLogger();

@@ -81,6 +81,9 @@ its roles:
   template.
 - **An AI-generated value goes the same way** once approved: the review is the control, which is
   why nothing generated is ever applied without one.
+- **Deleting a channel needs no role of the plugin**: whoever may delete a channel in Sylius
+  deletes its overrides and suggestions with it
+  ([decision record](../adr/0025-a-deleted-channel-takes-its-translations-along.md)).
 - **`ROLE_AI_TRANSLATION_GENERATE` spends the provider budget**, and the texts to translate are
   sent to the provider configured, with the channel's context when it has one.
 

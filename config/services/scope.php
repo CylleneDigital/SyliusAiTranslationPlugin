@@ -35,6 +35,6 @@ return static function (ContainerConfigurator $container): void {
             service(ScopePurger::class),
             service('logger'),
         ])
-        // After the host's listeners: a purge that fails closes the entity manager they share.
+        // After the host's listeners: a purge whose flush fails closes the entity manager they share.
         ->tag('kernel.event_listener', ['event' => 'sylius.channel.post_delete', 'priority' => -1024]);
 };
