@@ -1,6 +1,6 @@
 # 0022. The guard against double billing is the engine's
 
-- Status: accepted
+- Status: superseded by [0024](0024-double-billing-guard-is-the-engines-contract.md)
 - Date: 2026-10-13
 
 ## Context

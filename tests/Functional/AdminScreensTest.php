@@ -11,6 +11,7 @@ use CylleneDigital\SyliusAiTranslationPlugin\Transfer\ImportUploadLimit;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+use Symfony\Component\DomCrawler\Crawler;
 use Tests\CylleneDigital\SyliusAiTranslationPlugin\SyncsTestSchema;
 
 /**
@@ -314,6 +315,34 @@ final class AdminScreensTest extends WebTestCase
         $content = (string) $this->client->getResponse()->getContent();
         self::assertStringContainsString('app.welcome', $content);
         self::assertStringContainsString('app.dashboard', $content);
+    }
+
+    public function testARowStillWithTheProviderIsNotShownAsAFailure(): void
+    {
+        /** @var EntityManagerInterface $entityManager */
+        $entityManager = self::getContainer()->get(EntityManagerInterface::class);
+        // What the engine stores before calling the provider: an errored row, marked in flight.
+        $reserved = TranslationSuggestion::failed('app.welcome', 'messages', 'fr_FR', 'Welcome', 'en_US', 'stub', 'Interrupted before the reply was stored');
+        $reserved->setMetadata(['in_flight' => '2026-10-15T10:00:00.000000+00:00']);
+        $entityManager->persist($reserved);
+        $entityManager->persist(TranslationSuggestion::failed('app.dashboard', 'messages', 'fr_FR', 'Dashboard', 'en_US', 'stub', 'The provider answered 429'));
+        $entityManager->flush();
+
+        $crawler = $this->client->request('GET', '/admin/translations/suggestions');
+        self::assertResponseIsSuccessful();
+
+        // Every trigger of the review modal (the cells, the row button) says whether the row is in flight.
+        self::assertNotCount(0, $crawler->filter('[data-suggestion-key="app.welcome"]'));
+        self::assertCount(0, $crawler->filter('[data-suggestion-key="app.welcome"]:not([data-suggestion-in-flight="1"])'));
+        self::assertNotCount(0, $crawler->filter('[data-suggestion-key="app.dashboard"][data-suggestion-in-flight="0"][data-suggestion-error="The provider answered 429"]'));
+        self::assertCount(1, $crawler->filter('#suggestion-review-modal [data-ait-admin-review-modal-target="inFlight"]'));
+        $badges = static fn (string $label): int => $crawler->filter('span.badge')->reduce(static fn (Crawler $badge): bool => str_contains($badge->text(), $label))->count();
+        self::assertSame(1, $badges('Sent to the provider'));
+        self::assertSame(1, $badges('Generation failed'));
+        // Its approve button says the value is still to come, not that there is none.
+        $hints = static fn (string $start): int => $crawler->filter('button[disabled][data-bs-title]')->reduce(static fn (Crawler $button): bool => str_starts_with((string) $button->attr('data-bs-title'), $start))->count();
+        self::assertSame(1, $hints("The provider's reply is not stored yet"));
+        self::assertSame(1, $hints('No value to apply'));
     }
 
     public function testAScalarCriteriaOrSortingIsIgnoredOnBothScreens(): void

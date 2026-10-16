@@ -26,15 +26,15 @@ key are the engine's.
 | Path | Role |
 |---|---|
 | `Controller/Admin/` | One invokable controller per route, under `Translation/` and `Suggestion/`. `Screen` holds what the actions of a screen share: its CSRF intention, its flashes and the way back to its list. `Input/` holds the objects the requests are mapped to |
-| `Bridge/` | The Sylius adapters of the engine's host-facing interfaces: locales, author, channel scopes |
-| `Scope/` | Which channel a request works on (`ChannelScopeResolver`), and the channels read once per request (`ChannelRegistry`) |
+| `Bridge/` | The Sylius adapters of the engine's host-facing interfaces: locales, author, channel scopes and their locales |
+| `Scope/` | Which channel a request works on (`ChannelScopeResolver`), and the channels read once per request, one second at most outside one (`ChannelRegistry`) |
 | `Grid/` | The two grids, the data provider of the catalogue one (its rows are computed, not entities), their filter choices and the bulk action renderer |
 | `View/` | The rows of the catalogue grid and of the export, built from the engine's data |
 | `Override/` | The rules of a hand edit: unchanged, revert to the baseline, empty refusal, orphan refusal, syntax, placeholders |
 | `Transfer/` | Import staging: a file is previewed, then confirmed, before anything is written |
 | `Security/` | The permissions and the voter granting them from the roles |
 | `Form/Extension/` | The "AI translation" field of the channel form |
-| `Menu/`, `EventListener/` | The admin menu entry, and the cleanup of a deleted channel's settings |
+| `Menu/`, `EventListener/` | The admin menu entry, and the purge of a deleted channel's overrides, suggestions and prompt context |
 | `Twig/` | What the review screen shows about a suggestion, computed when the page is rendered |
 | `DependencyInjection/` | Loads the services and prepends the Twig hooks, the grid action templates, the generation bus, the import staging cache pool and the theme translation roots |
 
@@ -45,7 +45,8 @@ key are the engine's.
 1. `Translation\IndexController` resolves the channel from `?scope=` and renders the page; the
    grid asks `CatalogueGridProvider` for its rows.
 2. `CatalogueRows` turns the filters into a selection and `TranslationViewFactory` reads the
-   engine: file values, overrides, inherited values and reference texts.
+   engine: file values, overrides and inherited values (every catalogue of the view in one
+   read), and reference texts.
 3. A row opens the edit modal, filled from the `data-*` attributes of its trigger by a Stimulus
    controller.
 4. `Translation\SaveController` hands the value to `ManualOverrideEditor`, which decides: store an
@@ -69,7 +70,9 @@ key are the engine's.
    `GenerateSuggestionsMessage` per catalogue on `cyllene_digital_ai_translation.bus`. The form's
    button locks for 60 seconds in the browser (`assets/admin/js/generation-controller.js`); the
    server queues whatever it receives, the engine guarding the bill
-   ([why](../adr/0022-double-billing-guard-is-the-engine.md)).
+   ([why](../adr/0024-double-billing-guard-is-the-engines-contract.md)). The engine checks the
+   channel when a run starts and before each chunk; outside a request, `ChannelRegistry` keeps
+   the channels one second at most, so that a channel deleted meanwhile stops the run.
 3. A worker runs the engine's handler: pending suggestions appear in the grid, and each run in the
    journal under it, failures included - the last ten of the channel
    (`Suggestion\IndexController::JOURNAL_LENGTH`).

@@ -261,7 +261,7 @@ jobs:
                     compression-level: 6
                     overwrite: true
 
-    # `^1.0` claims every engine release since 1.0.0: the matrix above resolves the newest one,
+    # `^1.4.1` claims every engine release since 1.4.1: the matrix above resolves the newest one,
     # this job the oldest the constraint allows, on the primary combination.
     engine-lowest:
         runs-on: ubuntu-24.04

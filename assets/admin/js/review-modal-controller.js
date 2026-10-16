@@ -13,7 +13,7 @@ export default class extends Controller {
         'currentBlock', 'current', 'currentOrigin',
         'value', 'locale',
         'same',
-        'error', 'errorMessage',
+        'inFlight', 'error', 'errorMessage',
         'mismatch', 'mismatchList',
         'plural', 'pluralList',
         'syntax', 'syntaxList',
@@ -50,7 +50,14 @@ export default class extends Controller {
         this.currentTarget.value = this.currentValue ?? '';
         this.currentOriginTarget.textContent = suggestion.suggestionCurrentOrigin;
 
-        this.show(this.errorTarget, this.errorMessageTarget, suggestion.suggestionError);
+        // A reserved row carries the engine's "interrupted" error while its run still waits.
+        // The target came after the template: a host's override of it may not have it, and
+        // then shows the row's error as before rather than nothing.
+        const inFlight = this.hasInFlightTarget && suggestion.suggestionInFlight === '1';
+        if (this.hasInFlightTarget) {
+            this.inFlightTarget.classList.toggle('d-none', !inFlight);
+        }
+        this.show(this.errorTarget, this.errorMessageTarget, inFlight ? '' : suggestion.suggestionError);
         this.show(this.mismatchTarget, this.mismatchListTarget, suggestion.suggestionMismatch);
         this.show(this.pluralTarget, this.pluralListTarget, suggestion.suggestionPlural);
         this.show(this.syntaxTarget, this.syntaxListTarget, suggestion.suggestionSyntax);

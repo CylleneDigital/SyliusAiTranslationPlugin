@@ -159,6 +159,12 @@ final class ReviewingSuggestionsContext implements Context
         Assert::false($this->suggestionsPage->canApproveFromModal());
     }
 
+    #[Then('I should be told it is still with the provider')]
+    public function iShouldBeToldItIsStillWithTheProvider(): void
+    {
+        Assert::true($this->suggestionsPage->isReviewShownAsWithTheProvider());
+    }
+
     #[Then('the journal should start with the failure :error')]
     public function theJournalShouldStartWithTheFailure(string $error): void
     {

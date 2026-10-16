@@ -159,6 +159,20 @@ final class ManualOverrideEditorTest extends KernelTestCase
         self::assertFalse($this->manager()->hasOverride('app.dashboard', 'messages', 'fr_FR'));
     }
 
+    public function testTypingBackAnInheritedValueThatSaysWhatTheFileSaysIsNotAReturnToTheFile(): void
+    {
+        // The global override repeats the file: once the channel's own one is gone, the entry
+        // still follows the global one, which may change later.
+        $this->manager()->saveOverride('app.dashboard', 'messages', 'fr_FR', 'Tableau de bord');
+        $this->manager()->saveOverride('app.dashboard', 'messages', 'fr_FR', 'Cockpit', null, self::CHANNEL);
+
+        $edit = $this->editor()->edit('app.dashboard', 'messages', 'fr_FR', self::CHANNEL, 'Tableau de bord');
+
+        self::assertSame(ManualEditOutcome::Reverted, $edit->outcome);
+        self::assertFalse($edit->revertedToFile);
+        self::assertFalse($this->manager()->hasOverride('app.dashboard', 'messages', 'fr_FR', self::CHANNEL));
+    }
+
     public function testAnEmptyValueIsRefusedWhereTheEntryHasATextToShow(): void
     {
         $this->manager()->saveOverride('app.dashboard', 'messages', 'fr_FR', 'Pilotage');

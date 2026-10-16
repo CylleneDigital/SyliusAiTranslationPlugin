@@ -26,7 +26,12 @@ global `llm_context` of the configuration. It has no effect on global generation
 other channels, is never translated itself, and is sent to LLM providers as an instruction
 and to DeepL as its steering `context`. The cost estimate of the Suggestions screen
 includes it. Stored by the engine in its per-scope settings table (scope = channel code):
-the host's `Channel` entity is not touched, and deleting a channel deletes its settings.
+the host's `Channel` entity is not touched.
+
+Deleting a channel deletes what the engine stores for it: its overrides, its suggestions and
+this context; the journal of its generations stays. It does not come back: export the channel's
+view first to keep a copy. A channel Sylius refuses to delete (the last enabled one, one still in
+use) keeps everything.
 
 ## Translations › Catalogue (`/admin/translations`)
 
@@ -88,7 +93,9 @@ The catalogue browser is a **Sylius grid** over computed rows (`CatalogueGrid` +
 - **Import**: header button opening a **modal**: file field, a collapsible "Which format?"
   block with one example per format, "download a ready-to-fill template" links. The upload
   writes nothing: the dashboard shows a **preview card** (N overrides would be imported,
-  invalid entries skipped and **each named** (its row or trans-unit, its key and why),
+  invalid entries skipped and **each named** (its row or trans-unit, its key and why: a
+  locale the host does not know or its channel does not offer (a parent language is offered:
+  `fr` for a channel in `fr_FR`), a value that breaks the catalogue's syntax…),
   overrides removed when the imported value is the one the entry would show without them,
   already-up-to-date or empty values ignored, per-locale breakdown) to **confirm or
   cancel**; the skipped entries are listed again after the import. A new upload, refused or
@@ -143,7 +150,11 @@ so a channel-specific wording in the source language drives the suggestion.
   re-sends **only** the keys whose previous run failed: no other key, missing or not. A provider failure stores an **errored
   suggestion per unfulfilled key** (no value, confidence 0, the provider error on the
   row) and is journaled in `cyllene_translation_generation_log` without Messenger retry
-  (re-generating later is idempotent). The screen lists the **last ten runs** of the channel
+  (re-generating later is idempotent). A run queued for a channel deleted since is refused
+  before anything is sent to the provider: it leaves no journal entry, only an error in the
+  worker's log and the message on the failure transport when there is one. A run whose channel
+  is deleted while it runs stops before its next chunk, journaled as a failure, under the code
+  of a channel that no longer exists (a channel created again under that code shows it in its journal). The screen lists the **last ten runs** of the channel
   being browsed under the grid, failures included with their error: generation being
   asynchronous, that is where a run that produced nothing shows.
 - **Save-time syntax validation**: an override (hand edit, import) or an approved
@@ -163,7 +174,11 @@ so a channel-specific wording in the source language drives the suggestion.
   them, not read from what the generation stored), and a red
   **"Generation failed"** badge (full error on hover and in the review modal) on errored rows,
   whose value must be typed in before approval (the row's approve button is disabled, the bulk
-  skips them, the server refuses them)),
+  skips them, the server refuses them); a grey **"Sent to the provider"** one instead on the rows
+  the engine reserved before calling the provider: their run is still waiting for the reply, or
+  was stopped while it waited - such a row stays so until "Retry errors" sends it again, or a
+  reviewer types its value in the review modal or rejects it; the review modal says so in place
+  of a failure. The "Generation failed" filter keeps them too),
   target-locale badge, confidence badge (green `>= 90%`, orange `>= 70%`, red below,
   self-assessed by the LLMs), provider badge. Clicking the **source or proposal cell opens
   the review modal**.

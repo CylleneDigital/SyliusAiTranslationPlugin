@@ -16,7 +16,7 @@ This file only holds what reading the code will not tell you.
 The plugin targets Sylius 2.1, 2.2 and 2.3, Symfony 7.4 and 8 (8 with Sylius 2.3 only), PHP 8.3+.
 It is the Sylius back office of
 [`cyllene-digital/ai-translation-bundle`](https://github.com/CylleneDigital/AiTranslationBundle)
-(`^1.0`, from Packagist): the engine, its entities and its `cyllene_digital_ai_translation`
+(`^1.4.1`, from Packagist): the engine, its entities and its `cyllene_digital_ai_translation`
 configuration tree live there, not here.
 
 ## Where things live
@@ -26,7 +26,7 @@ configuration tree live there, not here.
 | `src/Controller/Admin/` | One invokable controller per route, under `Translation/` and `Suggestion/`; `Screen` is what the actions of a screen share (CSRF intention, flashes, the way back to the list), `Input/` the objects their requests are mapped to |
 | `src/Override/ManualOverrideEditor.php` | The rules of a hand edit (unchanged, revert to the baseline, empty refusal, orphan refusal, syntax, placeholders), returned as a `ManualEdit`: the controller only words each outcome |
 | `src/Security/` | The permissions (`Permission`) and the voter granting them from the roles |
-| `src/Bridge/` | The Sylius adapters of the engine's host-facing interfaces: locales, admin author, channel scopes |
+| `src/Bridge/` | The Sylius adapters of the engine's host-facing interfaces: locales, admin author, channel scopes and their locales |
 | `src/Grid/` | Sylius grids built in PHP over the engine's data (`CatalogueGrid`, `SuggestionGrid`) and their rendering helpers |
 | `src/Scope/ChannelScopeResolver.php` | Which channel (or the global scope) a request works on |
 | `src/Transfer/` | Import staging: a file is previewed, then confirmed, before anything is written |
@@ -100,10 +100,12 @@ the schema from the mapping (`database_setup: schema`), the MySQL and MariaDB jo
   has no use for (and may not reach): disabled via `sylius_twig_hooks` in the same config.
 - Never set `DATABASE_URL` in the environment before running the tests: an external env variable
   would override `.env.test(.local)` and run the tests against the wrong database.
-- The catalogue screen costs what the engine costs: for each page, every translation file of
-  the view is parsed again (the engine caches them per process, not across requests) and each
-  catalogue takes two queries (`getTranslationsForCatalogue()`). The lever is in the engine, not
-  in a plugin-side cache of its rows
+- The catalogue screen costs what the engine costs: the parsed translation files come from the
+  engine's `cyllene_digital_ai_translation.translation_files_cache` pool, the overrides of the
+  browsed locale from one grouped read for the whole view
+  (`OverrideReader::getTranslationsForCatalogues()`), plus one read per reference locale;
+  `tests/Integration/View/TranslationViewFactoryTest.php` checks that the number of catalogues
+  does not change the count. The lever is in the engine, not in a plugin-side cache of its rows
   ([0014](docs/adr/0014-no-plugin-side-cache-of-catalogue-rows.md)).
 - Front build (required by the functional tests: admin pages render the Webpack Encore
   entrypoints): in `vendor/sylius/test-application`, `yarn install && yarn build`. The test
@@ -193,14 +195,24 @@ file does.
   needs the real engine takes it from the container (`tests/Integration/`, `tests/Functional/`,
   with the `SyncsTestSchema` trait); one that does not stubs `TranslationManagerInterface`.
 - **No server-side lock on a generation in the plugin**: the guard against double billing is the
-  engine's ([0022](docs/adr/0022-double-billing-guard-is-the-engine.md)).
+  engine's, written into its public contract
+  ([0024](docs/adr/0024-double-billing-guard-is-the-engines-contract.md)). The engine checks the
+  channel when a run starts and before each chunk: `ChannelRegistry` keeps the channels for a
+  whole request, but one second at most outside one (a worker, the console), or a channel
+  deleted during a run would not stop it.
+- **A deleted channel is purged on `sylius.channel.post_delete`, at priority `-1024`**, never on
+  `pre_delete` nor in a Doctrine listener: `ChannelDeletionListener` calls the engine's
+  `ScopePurger` once Sylius has committed the deletion and the host's listeners have run
+  (overrides, suggestions, prompt context; the journal stays), and logs a purge that fails
+  (an `\Exception`, not an `\Error`) instead of throwing; `cyllene:ai-translation:purge-scopes` catches what it
+  missed ([0025](docs/adr/0025-a-deleted-channel-takes-its-translations-along.md)).
 - The public surface - the bundle class and its namespace, the admin routes, the Twig hooks and
   templates, the roles, the menu entry and the generation bus - only breaks in a major version,
   with an entry in `UPGRADE.md`.
 
 What was left as it is on purpose - no API, no live tracking of a generation, `pending_count`, the
 bulk action renderer decorator, the duplicated syntax labels, the uncached channel map, the
-`.gitignore`, the data of a deleted channel - is in the records 0015 to 0023: read them before
+`.gitignore` - is in the records 0015 to 0021: read them before
 "fixing" one.
 
 ## Keeping the docs in step

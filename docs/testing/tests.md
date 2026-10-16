@@ -46,7 +46,10 @@ rows. The test application's `translations/` and `themes/` directories are the "
 catalogues the tests browse.
 
 No test builds an engine service by hand: its constructors are not part of its contract. A test
-that needs the real engine takes it from the container.
+that needs the real engine takes it from the container. What a view costs is therefore counted
+on the real engine too: `tests/Integration/View/TranslationViewFactoryTest.php` reads the queries
+Doctrine's debug middleware collected, and checks that the number of catalogues of a view does
+not change it.
 
 ## Behat
 

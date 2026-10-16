@@ -48,6 +48,9 @@ final class AdminActionsTest extends WebTestCase
 
     private const string BULK_TEST_CHANNEL = 'AI_TEST_BULK';
 
+    /** A second enabled channel: Sylius refuses to delete the last enabled one. */
+    private const string OTHER_TEST_CHANNEL = 'AI_TEST_BULK_OTHER';
+
     private KernelBrowser $client;
 
     public static function setUpBeforeClass(): void
@@ -81,7 +84,8 @@ final class AdminActionsTest extends WebTestCase
 
         /** @var EntityManagerInterface $entityManager */
         $entityManager = self::getContainer()->get(EntityManagerInterface::class);
-        $entityManager->getConnection()->executeStatement('DELETE FROM sylius_channel WHERE code = ?', [self::BULK_TEST_CHANNEL]);
+        $entityManager->getConnection()->executeStatement('DELETE FROM sylius_channel WHERE code IN (?, ?)', [self::BULK_TEST_CHANNEL, self::OTHER_TEST_CHANNEL]);
+        $entityManager->getConnection()->executeStatement('DELETE FROM cyllene_translation_generation_log WHERE scope = ?', [self::BULK_TEST_CHANNEL]);
 
         self::ensureKernelShutdown();
     }
@@ -343,6 +347,73 @@ final class AdminActionsTest extends WebTestCase
         $manager->saveOverride('app.dashboard', 'messages', 'fr_FR', 'Pilotage', null, self::BULK_TEST_CHANNEL);
         $this->client->request('POST', '/admin/translations/reset', ['_token' => $this->transferToken(), 'key' => 'app.dashboard', 'catalogue' => 'messages', 'scope' => self::BULK_TEST_CHANNEL, 'locale' => 'fr_FR']);
         self::assertResponseRedirects();
+        self::assertNull($this->overrideRepository()->findOneByKey('app.dashboard', 'messages', 'fr_FR', self::BULK_TEST_CHANNEL));
+    }
+
+    public function testDeletingAChannelFromItsGridPurgesItsTranslationsAndKeepsItsJournal(): void
+    {
+        /** @var EntityManagerInterface $entityManager */
+        $entityManager = self::getContainer()->get(EntityManagerInterface::class);
+        $this->createTestChannel($entityManager);
+        $this->createTestChannel($entityManager, self::OTHER_TEST_CHANNEL);
+
+        /** @var TranslationManagerInterface $manager */
+        $manager = self::getContainer()->get(TranslationManagerInterface::class);
+        $manager->saveOverride('app.dashboard', 'messages', 'fr_FR', 'Pilotage', null, self::BULK_TEST_CHANNEL);
+        $manager->saveOverride('app.dashboard', 'messages', 'fr_FR', 'Cockpit', null, self::OTHER_TEST_CHANNEL);
+        $entityManager->persist(new TranslationSuggestion('app.welcome', 'messages', 'fr_FR', 'Bienvenue', 'Welcome', 'en_US', 'stub', 0.9, self::BULK_TEST_CHANNEL));
+        $entityManager->persist(GenerationLog::success('messages', 'fr_FR', 'en_US', 'stub', 1, self::BULK_TEST_CHANNEL));
+        $entityManager->flush();
+
+        /** @var RepositoryInterface<ChannelInterface> $channels */
+        $channels = self::getContainer()->get('sylius.repository.channel');
+        $id = $channels->findOneBy(['code' => self::BULK_TEST_CHANNEL])?->getId();
+        self::assertIsInt($id);
+
+        // Through Sylius' own controller and transaction, as an admin does it from the grid.
+        $crawler = $this->client->request('GET', '/admin/channels/');
+        $this->client->submit($crawler->filter(\sprintf('form[action="/admin/channels/%d"]', $id))->form());
+        self::assertResponseRedirects();
+        $this->client->followRedirect();
+
+        self::assertNull($channels->findOneBy(['code' => self::BULK_TEST_CHANNEL]));
+        self::assertNull($this->overrideRepository()->findOneByKey('app.dashboard', 'messages', 'fr_FR', self::BULK_TEST_CHANNEL));
+        $connection = $entityManager->getConnection();
+        self::assertCount(0, $connection->fetchFirstColumn('SELECT 1 FROM cyllene_translation_suggestion WHERE scope = ?', [self::BULK_TEST_CHANNEL]));
+        self::assertCount(1, $connection->fetchFirstColumn('SELECT 1 FROM cyllene_translation_generation_log WHERE scope = ?', [self::BULK_TEST_CHANNEL]));
+        self::assertSame('Cockpit', $this->overrideRepository()->findOneByKey('app.dashboard', 'messages', 'fr_FR', self::OTHER_TEST_CHANNEL)?->getValue());
+    }
+
+    public function testAnImportSkipsARowInALocaleItsChannelDoesNotExpose(): void
+    {
+        /** @var EntityManagerInterface $entityManager */
+        $entityManager = self::getContainer()->get(EntityManagerInterface::class);
+        $this->createTestChannel($entityManager);
+
+        /** @var RepositoryInterface<ChannelInterface> $channels */
+        $channels = self::getContainer()->get('sylius.repository.channel');
+        /** @var RepositoryInterface<LocaleInterface> $locales */
+        $locales = self::getContainer()->get('sylius.repository.locale');
+        $channel = $channels->findOneBy(['code' => self::BULK_TEST_CHANNEL]);
+        $english = $locales->findOneBy(['code' => 'en_US']);
+        self::assertNotNull($channel);
+        self::assertNotNull($english);
+        $channel->addLocale($english);
+        $entityManager->flush();
+
+        $token = $this->transferToken();
+        $file = $this->csvUpload('overrides.csv', "locale,catalogue,translation_key,value,scope\nen_US,messages,app.dashboard,Cockpit," . self::BULK_TEST_CHANNEL . "\nfr_FR,messages,app.dashboard,Pilotage," . self::BULK_TEST_CHANNEL . "\n");
+
+        $this->client->request('POST', '/admin/translations/import', ['_token' => $token], ['file' => $file]);
+        $this->client->followRedirect();
+        self::assertStringContainsString(
+            \sprintf('row 3 — app.dashboard: scope "%s" does not expose locale "fr_FR"', self::BULK_TEST_CHANNEL),
+            html_entity_decode((string) $this->client->getResponse()->getContent()),
+        );
+
+        $this->client->request('POST', '/admin/translations/import/confirm', ['_token' => $token]);
+        self::assertResponseRedirects();
+        self::assertSame('Cockpit', $this->overrideRepository()->findOneByKey('app.dashboard', 'messages', 'en_US', self::BULK_TEST_CHANNEL)?->getValue());
         self::assertNull($this->overrideRepository()->findOneByKey('app.dashboard', 'messages', 'fr_FR', self::BULK_TEST_CHANNEL));
     }
 
@@ -892,16 +963,16 @@ final class AdminActionsTest extends WebTestCase
         self::assertStringContainsString('/admin/translations/suggestions', $content);
     }
 
-    /** The test channel (removed by tearDown): code, name, default locale and base currency. */
-    private function createTestChannel(EntityManagerInterface $entityManager): void
+    /** A test channel (removed by tearDown): code, name, default locale and base currency. */
+    private function createTestChannel(EntityManagerInterface $entityManager, string $code = self::BULK_TEST_CHANNEL): void
     {
         $container = self::getContainer();
 
         /** @var FactoryInterface<ChannelInterface> $channelFactory */
         $channelFactory = $container->get('sylius.factory.channel');
         $channel = $channelFactory->createNew();
-        $channel->setCode(self::BULK_TEST_CHANNEL);
-        $channel->setName('Bulk scope test');
+        $channel->setCode($code);
+        $channel->setName('Bulk scope test ' . $code);
 
         /** @var RepositoryInterface<LocaleInterface> $localeRepository */
         $localeRepository = $container->get('sylius.repository.locale');

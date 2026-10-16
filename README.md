@@ -32,7 +32,7 @@ per-channel context for the AI, under human review, always.
 | PHP | `^8.3` (Symfony 8: `^8.4`) |
 | Sylius | `2.1`, `2.2`, `2.3` |
 | Symfony | `^7.4`, or `^8.0` with Sylius 2.3 |
-| [`cyllene-digital/ai-translation-bundle`](https://packagist.org/packages/cyllene-digital/ai-translation-bundle) | `^1.0` |
+| [`cyllene-digital/ai-translation-bundle`](https://packagist.org/packages/cyllene-digital/ai-translation-bundle) | `^1.4.1` |
 
 In a Symfony 7.4 project, pin the stack with `extra.symfony.require: "7.4.*"` (standard Flex
 practice): without it Composer may mix Symfony 8 components (`symfony/var-exporter`…) into a
@@ -177,10 +177,32 @@ a review: the engine runs one generation at a time per catalogue, target locale 
 skips every key that already has a pending suggestion. That guard is a `symfony/lock` lock, whose
 default store is local to one machine: workers spread over several hosts need a shared store
 (`framework.lock`). When the store cannot be reached, the engine logs a warning and runs the
-generation unguarded: two concurrent runs are then billed twice. A key is billed again in two
+generation unguarded: two concurrent runs can then both call the provider; the database stops
+the one that reserves a key the other holds, before that run pays for its chunk. A key is billed again in two
 cases: its suggestion was reviewed in between and the run still covers it (a rejected one, or any
 key of an "All keys" run), or the run is a "Retry errors" one, which re-sends the keys whose
-previous run failed for as long as they fail.
+previous run failed for as long as they fail. A run for a channel deleted since it was queued
+bills nothing: the engine refuses it before calling the provider. A run whose channel is deleted
+while it runs stops before its next chunk, journaled as a failure: only the chunk already with
+the provider is billed.
+
+Deleting a channel from the admin purges its overrides, suggestions and prompt context, once the
+deletion is committed; the journal of its generations stays. A purge that fails is logged; what it
+left, and what a channel deleted another way (a script, Sylius' API, SQL) or with plugin 1.0.x
+keeps, is purged by `bin/console cyllene:ai-translation:purge-scopes --force` (without `--force`,
+it only lists them). The command only sees the codes no channel uses any more: a channel created
+again under the code finds those rows.
+
+Keep the `cyllene_ai_translation` transport asynchronous: a run executed inside a request keeps the
+channels as it first read them in that request, does not stop when its channel is deleted, and
+goes on billing its next chunks, stored under the deleted code.
+
+The engine keeps the translation files it parses in the
+`cyllene_digital_ai_translation.translation_files_cache` pool, keyed by their path and content: a
+file rewritten in place is read again at once. A new `symfony/translation` release that parses a
+file differently is only seen once the cached entry expires (seven days by default): empty the
+pool with `bin/console cache:pool:clear cyllene_digital_ai_translation.translation_files_cache`.
+`cache:clear` does not empty it when `APP_SHARE_DIR` is set (the Symfony 7.4 and 8 skeletons).
 
 An uploaded import waits for its confirmation, one hour at most, in the
 `cyllene_digital_sylius_ai_translation.import_staging` cache pool, built on `cache.app`. Behind a load
@@ -233,8 +255,8 @@ the support policy: [public contract](https://github.com/CylleneDigital/SyliusAi
 Sylius test application against a real database, log an admin in and drive both screens through
 the HTTP kernel, the suggestion workflow included.
 
-**The continuous integration matrix** runs the unit, integration and functional tests, 45 Behat scenarios
-(13 of them in headless Chrome, on the primary combination; 12 reading the result in the shop), PHPStan at `max` level, the coding
+**The continuous integration matrix** runs the unit, integration and functional tests, 46 Behat scenarios
+(14 of them in headless Chrome, on the primary combination; 12 reading the result in the shop), PHPStan at `max` level, the coding
 standard, container, template and translation linting and a strict `composer validate` on PHP
 8.3, 8.4 and 8.5, against Sylius 2.1, 2.2 and 2.3 on MySQL 8.4 - and, on the primary
 combination, on MySQL 8.0, MariaDB 10.11 and 11.4, PostgreSQL 15, 16 and 17.

@@ -105,6 +105,16 @@ final class IndexPage extends AdminScreenPage
         return null !== $button && !$button->hasAttribute('disabled');
     }
 
+    /** The review modal says the row waits for the provider, and shows no generation error. */
+    public function isReviewShownAsWithTheProvider(): bool
+    {
+        $modal = $this->waitForModal('suggestion-review-modal');
+        $inFlight = $modal->find('css', '[data-ait-admin-review-modal-target="inFlight"]');
+        $error = $modal->find('css', '[data-ait-admin-review-modal-target="error"]');
+
+        return null !== $inFlight && $inFlight->isVisible() && (null === $error || !$error->isVisible());
+    }
+
     public function selectEveryRow(): void
     {
         foreach ($this->getDocument()->findAll('css', 'tbody input[type="checkbox"]') as $checkbox) {

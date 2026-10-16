@@ -119,9 +119,9 @@ French.
 
 ### Behat
 
-45 scenarios under `features/`, one suite per feature (`tests/Behat/Resources/suites.php`): 33 on the back
+46 scenarios under `features/`, one suite per feature (`tests/Behat/Resources/suites.php`): 34 on the back
 office (`features/admin/`) and 12 on what the shop ends up showing (`features/shop/`). 32 use
-the Mink `symfony` session (no browser); 13 are tagged `@javascript` and drive a real Chrome: the
+the Mink `symfony` session (no browser); 14 are tagged `@javascript` and drive a real Chrome: the
 edit and review modals, the cost estimate, the confirmation of a run on every catalogue, the bulk
 approval, the channel selector and the confirmation of the orphan purge - everything a Stimulus
 controller does. That last confirmation is a native dialog, which would block the click: its
@@ -296,7 +296,7 @@ it there, which is the moment to check that the engine's
 names it, method by method. What that page does not list is internal and may change in a minor
 version: ask the engine to list it rather than rely on it.
 
-Two CI jobs watch the two ends of the `^1.0` constraint:
+Two CI jobs watch the two ends of the `^1.4.1` constraint:
 
 - `Oldest supported engine` (part of `Build complete`) runs the container lint, PHPStan and
   PHPUnit on the lowest release the constraint allows. A pull request that needs a newer engine raises the constraint.

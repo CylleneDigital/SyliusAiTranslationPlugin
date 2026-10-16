@@ -26,6 +26,7 @@ final class EngineContractTest extends TestCase
         'Catalogue\\LocaleProviderInterface',
         'Override\\AuthorProviderInterface',
         'Override\\TranslationManagerInterface',
+        'Scope\\ScopeLocalesProviderInterface',
         'Scope\\ScopeProviderInterface',
         'Suggestion\\TranslationAiServiceInterface',
         // Services.
@@ -36,6 +37,7 @@ final class EngineContractTest extends TestCase
         'Provider\\TranslationProviderRegistry',
         'Repository\\TranslationSuggestionRepository',
         'Scope\\ScopeParametersManager',
+        'Scope\\ScopePurger',
         'Suggestion\\PlaceholderConsistencyChecker',
         'Transfer\\OverrideExporter',
         'Transfer\\OverrideImporter',
@@ -82,7 +84,7 @@ final class EngineContractTest extends TestCase
         ],
         'Entity\\TranslationSuggestion' => [
             null,
-            ['id', 'key', 'catalogue', 'locale', 'scope', 'sourceLocale', 'sourceValue', 'suggestedValue', 'generationError'],
+            ['id', 'key', 'catalogue', 'locale', 'scope', 'sourceLocale', 'sourceValue', 'suggestedValue', 'generationError', 'metadata'],
         ],
         'Estimation\\GenerationEstimate' => [
             ['Estimation\\GenerationCostEstimator', 'estimate'],

@@ -11,7 +11,8 @@ and the guides, which follow the code: a record that quoted them would be wrong 
 refactoring, and could not be corrected.
 
 A new record takes the next number, the template of the others (Status, Date, Context, Decision,
-Consequences, Related) and a line in the table below.
+Consequences, Related, and Supersedes under the date when it replaces one) and a line in the
+table below.
 
 | # | Decision |
 |---|---|
@@ -36,5 +37,7 @@ Consequences, Related) and a line in the table below.
 | 0019 | [The labels of the syntax issues are not factored](0019-syntax-issue-labels-not-factored.md) |
 | 0020 | [The channel code to name map is not cached](0020-channel-name-map-not-cached.md) |
 | 0021 | [The `.gitignore` names the maintainers' local tooling](0021-gitignore-names-maintainers-tooling.md) |
-| 0022 | [The guard against double billing is the engine's](0022-double-billing-guard-is-the-engine.md) |
-| 0023 | [A deleted channel keeps its overrides, suggestions and journal](0023-deleted-channel-keeps-its-translations.md) |
+| 0022 | [The guard against double billing is the engine's](0022-double-billing-guard-is-the-engine.md) (superseded by 0024) |
+| 0023 | [A deleted channel keeps its overrides, suggestions and journal](0023-deleted-channel-keeps-its-translations.md) (superseded by 0025) |
+| 0024 | [The guard against double billing is the engine's, by its contract](0024-double-billing-guard-is-the-engines-contract.md) (supersedes 0022) |
+| 0025 | [A deleted channel takes its overrides and suggestions along, its journal stays](0025-a-deleted-channel-takes-its-translations-along.md) (supersedes 0023) |

@@ -116,6 +116,41 @@ final class CatalogueRowsTest extends KernelTestCase
         self::assertFalse($byKey['app.welcome']['missing']);
     }
 
+    public function testEachCatalogueOfTheViewKeepsItsOwnOverrides(): void
+    {
+        /** @var TranslationManagerInterface $manager */
+        $manager = self::getContainer()->get(TranslationManagerInterface::class);
+        $manager->saveOverride('app.dashboard', 'messages', 'fr_FR', 'Tableau');
+        $manager->saveOverride('product.add_to_cart', 'shop/Product/messages', 'fr_FR', 'Au panier');
+
+        $rows = $this->rows()->get(['locale' => 'fr_FR'], '');
+        $overrides = array_column(array_filter($rows, static fn (array $row): bool => $row['hasOverride']), 'override', 'catalogue');
+
+        self::assertSame(['messages' => 'Tableau', 'shop/Product/messages' => 'Au panier'], $overrides);
+        self::assertSame('Ajouter au panier', array_column($rows, 'original', 'key')['product.add_to_cart']);
+    }
+
+    public function testEachCatalogueOfAChannelViewInheritsItsOwnGlobalOverrides(): void
+    {
+        /** @var TranslationManagerInterface $manager */
+        $manager = self::getContainer()->get(TranslationManagerInterface::class);
+        // The same key in two catalogues: an entry must not take the other catalogue's value.
+        $manager->saveOverride('app.dashboard', 'messages', 'fr_FR', 'Tableau global');
+        $manager->saveOverride('app.dashboard', 'shop/Product/messages', 'fr_FR', 'Tableau produit');
+
+        $rows = array_filter(
+            $this->rows()->get(['locale' => 'fr_FR'], 'B2B_TEST'),
+            static fn (array $row): bool => 'app.dashboard' === $row['key'],
+        );
+
+        self::assertSame(
+            ['messages' => 'Tableau global', 'shop/Product/messages' => 'Tableau produit'],
+            array_column($rows, 'inherited', 'catalogue'),
+        );
+        self::assertSame([['locale' => 'fr_FR', 'scope' => ''], ['locale' => 'fr_FR', 'scope' => '']], array_column($rows, 'inheritedFrom'));
+        self::assertSame([false, false], array_column($rows, 'hasOverride'));
+    }
+
     public function testAnOrphanCatalogueOnlyShowsItsOwnOverrides(): void
     {
         /** @var TranslationManagerInterface $manager */

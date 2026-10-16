@@ -24,6 +24,7 @@
     data-suggestion-has-current="{{ review.current is not null ? '1' : '0' }}"
     data-suggestion-current-origin="{% if review.currentOrigin == 'override' %}{{ 'cyllene_digital_sylius_ai_translation.ui.current_origin_override'|trans }}{% elseif review.currentOrigin == 'inherited' %}{{ inherited.label(review.inheritedFrom, suggestion.locale, suggestion.scope) }}{% elseif review.currentOrigin == 'file' %}{{ 'cyllene_digital_sylius_ai_translation.ui.current_origin_file'|trans }}{% endif %}"
     data-suggestion-error="{{ suggestion.generationError ?? '' }}"
+    data-suggestion-in-flight="{{ (suggestion.metadata.in_flight ?? null) ? '1' : '0' }}"
     data-suggestion-mismatch="{{ _self.placeholders(review.placeholders) }}"
     data-suggestion-syntax="{{ review.syntax|map(c => ('cyllene_digital_sylius_ai_translation.ui.' ~ c)|trans)|join(' · ') }}"
     data-suggestion-plural="{{ _self.pluralGaps(review.pluralGaps) }}"
