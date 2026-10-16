@@ -14,7 +14,9 @@ use CylleneDigital\SyliusAiTranslationPlugin\Grid\GridViewBuilder;
 use CylleneDigital\SyliusAiTranslationPlugin\Grid\SuggestionGrid;
 use CylleneDigital\SyliusAiTranslationPlugin\Scope\ChannelScopeResolver;
 use CylleneDigital\SyliusAiTranslationPlugin\Security\Permission;
+use CylleneDigital\SyliusAiTranslationPlugin\Twig\SuggestionReviewExtension;
 use Doctrine\Persistence\ManagerRegistry;
+use Pagerfanta\PagerfantaInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
@@ -45,6 +47,7 @@ final readonly class IndexController
         private TranslationManagerInterface $translationManager,
         private GridChoiceProvider $choices,
         private ManagerRegistry $doctrine,
+        private SuggestionReviewExtension $reviews,
         private ?string $defaultProvider,
     ) {
     }
@@ -55,12 +58,20 @@ final readonly class IndexController
         // A channel narrows the locales to the ones it exposes.
         $locales = $this->scopeResolver->getLocales($scope) ?? $this->translationManager->getAvailableLocales();
         $query = $request->query->all();
+        $resources = $this->gridViewBuilder->build(SuggestionGrid::NAME, $request);
+        $page = $resources->getData();
+
+        // Each row shows its entry's current value: read for the whole page at once. The
+        // pager keeps the page it loaded, which the grid then renders.
+        if ($page instanceof PagerfantaInterface) {
+            $this->reviews->prefetch($page->getCurrentPageResults());
+        }
 
         return new Response($this->twig->render('@CylleneDigitalSyliusAiTranslationPlugin/admin/suggestion/index.html.twig', [
             'scope' => $scope,
             'scope_params' => ChannelScopeResolver::routeParameters($scope),
             'available_scopes' => $this->scopeResolver->getAvailableScopes(),
-            'resources' => $this->gridViewBuilder->build(SuggestionGrid::NAME, $request),
+            'resources' => $resources,
             'pending_count' => $this->suggestionRepository->countPendingFiltered(null, null, null, $scope),
             'available_providers' => $this->providerRegistry->getNames(),
             'default_provider' => $this->defaultProvider,

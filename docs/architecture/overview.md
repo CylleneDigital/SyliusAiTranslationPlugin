@@ -35,7 +35,7 @@ key are the engine's.
 | `Security/` | The permissions and the voter granting them from the roles |
 | `Form/Extension/` | The "AI translation" field of the channel form |
 | `Menu/`, `EventListener/` | The admin menu entry, and the purge of a deleted channel's overrides, suggestions and prompt context |
-| `Twig/` | What the review screen shows about a suggestion, computed when the page is rendered |
+| `Twig/` | What the review screen shows about a suggestion, computed when the page is rendered from the entries its controller reads for the whole page at once |
 | `DependencyInjection/` | Loads the services and prepends the Twig hooks, the grid action templates, the generation bus, the import staging cache pool and the theme translation roots |
 
 ## Main flows

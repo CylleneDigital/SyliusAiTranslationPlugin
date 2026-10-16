@@ -151,6 +151,7 @@ return static function (ContainerConfigurator $container): void {
             service(TranslationManagerInterface::class),
             service('cyllene_digital_sylius_ai_translation.grid.choice_provider'),
             service('doctrine'),
+            service('cyllene_digital_sylius_ai_translation.twig.suggestion_review_extension'),
             param('cyllene_digital_ai_translation.default_provider'),
         ])
         ->tag('controller.service_arguments');

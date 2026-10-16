@@ -12,7 +12,7 @@ Composer installs both, and the engine is configured under its own
 | PHP | `^8.3` (Symfony 8: `^8.4`), with `ext-intl` |
 | Sylius | `2.1`, `2.2`, `2.3` |
 | Symfony | `^7.4`, or `^8.0` with Sylius 2.3 |
-| Engine | `^1.4.1` |
+| Engine | `^1.4.2` |
 
 A Messenger worker is needed for AI generation, and a Webpack Encore build for the admin assets,
 as for the rest of a Sylius application.
@@ -115,10 +115,9 @@ Deleting a channel from the admin purges what the engine stores for it - its ove
 suggestions and its prompt context - once Sylius has committed the deletion; the generation
 journal stays. A purge that fails is logged, and the deletion goes through. In a bulk deletion, a
 purge that fails during its flush closes the entity manager: the channels after it are not
-deleted, and the admin gets an error page. A run with the provider when its channel is deleted
-can still leave errored suggestions under the code, if the provider fails.
+deleted, and the admin gets an error page.
 
-What a failed purge or such a run leaves, and what a channel deleted another way (a script,
+What a failed purge leaves, and what a channel deleted another way (a script,
 Sylius' API, SQL) or with plugin 1.0.x keeps, stays until the engine's command purges it - as long
 as no channel is created again under the code: the command only sees the codes no channel uses
 any more, and a new channel under that code finds those rows. Without `--force`, it only lists
