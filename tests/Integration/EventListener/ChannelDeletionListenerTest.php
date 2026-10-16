@@ -12,6 +12,7 @@ use CylleneDigital\AiTranslationBundle\Scope\ScopePurger;
 use CylleneDigital\SyliusAiTranslationPlugin\EventListener\ChannelDeletionListener;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\AbstractLogger;
+use Psr\Log\LoggerInterface;
 use Sylius\Bundle\ResourceBundle\Event\ResourceControllerEvent;
 use Sylius\Component\Core\Model\ChannelInterface;
 use Sylius\Component\Currency\Model\CurrencyInterface;
@@ -34,7 +35,7 @@ final class ChannelDeletionListenerTest extends KernelTestCase
 
     private const string CHANNEL_CODE = 'AI_TEST_DELETION';
 
-    /** A second enabled channel: Sylius stops the deletion of the last enabled one. */
+    /** A second channel, whose data the purge of the first one must leave alone. */
     private const string OTHER_CHANNEL_CODE = 'AI_TEST_DELETION_OTHER';
 
     public static function setUpBeforeClass(): void
@@ -57,9 +58,9 @@ final class ChannelDeletionListenerTest extends KernelTestCase
         $connection = $entityManager->getConnection();
         $scopes = [self::CHANNEL_CODE, self::OTHER_CHANNEL_CODE];
         $connection->executeStatement('DELETE FROM cyllene_translation_scope_parameters WHERE scope IN (?, ?)', $scopes);
-        $connection->executeStatement('DELETE FROM cyllene_translation_override WHERE scope IN (?, ?)', $scopes);
-        $connection->executeStatement('DELETE FROM cyllene_translation_suggestion WHERE scope IN (?, ?)', $scopes);
         $connection->executeStatement('DELETE FROM cyllene_translation_generation_log WHERE scope IN (?, ?)', $scopes);
+        // The overrides and suggestions, cache.app with them: rows deleted behind the engine's back.
+        self::deleteOverridesAndSuggestions();
         $connection->executeStatement('DELETE FROM sylius_channel WHERE code IN (?, ?)', $scopes);
 
         self::ensureKernelShutdown();
@@ -109,9 +110,50 @@ final class ChannelDeletionListenerTest extends KernelTestCase
 
     public function testAPurgeThatFailsIsLoggedAndLeavesTheDeletionAlone(): void
     {
+        $logger = self::spyLogger();
+
+        /** @var FactoryInterface<ChannelInterface> $channelFactory */
+        $channelFactory = self::getContainer()->get('sylius.factory.channel');
+        $channel = $channelFactory->createNew();
+        // The engine refuses to purge the global scope '': the one failure a test can cause,
+        // the purger being final - a database that fails mid-purge is not reproduced.
+        $channel->setCode('');
+
+        self::listener($logger)(new ResourceControllerEvent($channel));
+
+        self::assertCount(1, $logger->errors);
+        self::assertStringStartsWith('error: ', $logger->errors[0]);
+    }
+
+    public function testTheListenerIgnoresSubjectsItCannotHandle(): void
+    {
+        $logger = self::spyLogger();
+        $listener = self::listener($logger);
+
+        // Called directly (not dispatched): Sylius' own listeners on the same event
+        // expect a channel, so the plugin's guard is exercised on its own.
+        $listener(new ResourceControllerEvent(new \stdClass()));
+        /** @var FactoryInterface<ChannelInterface> $channelFactory */
+        $channelFactory = self::getContainer()->get('sylius.factory.channel');
+        $listener(new ResourceControllerEvent($channelFactory->createNew()));
+
+        self::assertSame([], $logger->errors);
+    }
+
+    private static function listener(LoggerInterface $logger): ChannelDeletionListener
+    {
         /** @var ScopePurger $scopePurger */
         $scopePurger = self::getContainer()->get(ScopePurger::class);
-        $logger = new class() extends AbstractLogger {
+
+        return new ChannelDeletionListener($scopePurger, $logger);
+    }
+
+    /**
+     * @return AbstractLogger&object{errors: list<string>}
+     */
+    private static function spyLogger(): AbstractLogger
+    {
+        return new class() extends AbstractLogger {
             /** @var list<string> */
             public array $errors = [];
 
@@ -120,34 +162,6 @@ final class ChannelDeletionListenerTest extends KernelTestCase
                 $this->errors[] = (\is_string($level) ? $level : '?') . ': ' . $message;
             }
         };
-
-        /** @var FactoryInterface<ChannelInterface> $channelFactory */
-        $channelFactory = self::getContainer()->get('sylius.factory.channel');
-        $channel = $channelFactory->createNew();
-        // The engine refuses to purge the global scope '': the one failure a test can cause.
-        $channel->setCode('');
-
-        (new ChannelDeletionListener($scopePurger, $logger))(new ResourceControllerEvent($channel));
-
-        self::assertCount(1, $logger->errors);
-        self::assertStringStartsWith('error: ', $logger->errors[0]);
-    }
-
-    public function testTheListenerIgnoresSubjectsItCannotHandle(): void
-    {
-        $container = self::getContainer();
-
-        /** @var ChannelDeletionListener $listener */
-        $listener = $container->get('cyllene_digital_sylius_ai_translation.scope.channel_deletion_listener');
-
-        // Called directly (not dispatched): Sylius' own listeners on the same event
-        // expect a channel, so the plugin's guard is exercised on its own.
-        $listener(new ResourceControllerEvent(new \stdClass()));
-        /** @var FactoryInterface<ChannelInterface> $channelFactory */
-        $channelFactory = $container->get('sylius.factory.channel');
-        $listener(new ResourceControllerEvent($channelFactory->createNew()));
-
-        $this->addToAssertionCount(1);
     }
 
     private function createChannel(string $code, string $name): ChannelInterface

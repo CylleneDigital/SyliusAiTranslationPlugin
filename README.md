@@ -188,9 +188,12 @@ the provider is billed.
 
 Deleting a channel from the admin purges its overrides, suggestions and prompt context, once the
 deletion is committed; the journal of its generations stays. A channel deleted another way (a
-script, an API) keeps them until `bin/console cyllene:ai-translation:purge-scopes --force`, which
-also clears what channels deleted before the plugin purged them left behind: run it without `--force` to list
-them first.
+script, Sylius' API, SQL) keeps them until `bin/console cyllene:ai-translation:purge-scopes --force`,
+which also clears the rows of channels deleted before this version of the plugin: run it without
+`--force` to list them first.
+
+Keep the `cyllene_ai_translation` transport asynchronous: a run executed inside a request keeps the
+channels it read when the request started, and does not stop when its channel is deleted.
 
 The engine keeps the translation files it parses in the
 `cyllene_digital_ai_translation.translation_files_cache` pool, keyed by their path and content: a
@@ -250,8 +253,8 @@ the support policy: [public contract](https://github.com/CylleneDigital/SyliusAi
 Sylius test application against a real database, log an admin in and drive both screens through
 the HTTP kernel, the suggestion workflow included.
 
-**The continuous integration matrix** runs the unit, integration and functional tests, 45 Behat scenarios
-(13 of them in headless Chrome, on the primary combination; 12 reading the result in the shop), PHPStan at `max` level, the coding
+**The continuous integration matrix** runs the unit, integration and functional tests, 46 Behat scenarios
+(14 of them in headless Chrome, on the primary combination; 12 reading the result in the shop), PHPStan at `max` level, the coding
 standard, container, template and translation linting and a strict `composer validate` on PHP
 8.3, 8.4 and 8.5, against Sylius 2.1, 2.2 and 2.3 on MySQL 8.4 - and, on the primary
 combination, on MySQL 8.0, MariaDB 10.11 and 11.4, PostgreSQL 15, 16 and 17.

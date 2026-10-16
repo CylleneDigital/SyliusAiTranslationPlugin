@@ -119,9 +119,9 @@ French.
 
 ### Behat
 
-45 scenarios under `features/`, one suite per feature (`tests/Behat/Resources/suites.php`): 33 on the back
+46 scenarios under `features/`, one suite per feature (`tests/Behat/Resources/suites.php`): 34 on the back
 office (`features/admin/`) and 12 on what the shop ends up showing (`features/shop/`). 32 use
-the Mink `symfony` session (no browser); 13 are tagged `@javascript` and drive a real Chrome: the
+the Mink `symfony` session (no browser); 14 are tagged `@javascript` and drive a real Chrome: the
 edit and review modals, the cost estimate, the confirmation of a run on every catalogue, the bulk
 approval, the channel selector and the confirmation of the orphan purge - everything a Stimulus
 controller does. That last confirmation is a native dialog, which would block the click: its

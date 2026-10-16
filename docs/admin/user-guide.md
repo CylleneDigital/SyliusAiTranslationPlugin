@@ -28,7 +28,7 @@ and to DeepL as its steering `context`. The cost estimate of the Suggestions scr
 includes it. Stored by the engine in its per-scope settings table (scope = channel code):
 the host's `Channel` entity is not touched.
 
-Deleting a channel deletes what the plugin stores for it: its overrides, its suggestions and
+Deleting a channel deletes what the engine stores for it: its overrides, its suggestions and
 this context; the journal of its generations stays. It does not come back: export the channel's
 view first to keep a copy. A channel Sylius refuses to delete (the last enabled one, one still in
 use) keeps everything.
@@ -153,8 +153,8 @@ so a channel-specific wording in the source language drives the suggestion.
   (re-generating later is idempotent). A run queued for a channel deleted since is refused
   before anything is sent to the provider: it leaves no journal entry, only an error in the
   worker's log and the message on the failure transport when there is one. A run whose channel
-  is deleted while it runs stops before its next chunk, journaled as a failure, in the journal
-  of a channel no screen shows any more. The screen lists the **last ten runs** of the channel
+  is deleted while it runs stops before its next chunk, journaled as a failure, under the code
+  of a channel that no longer exists (a channel created again under that code shows it in its journal). The screen lists the **last ten runs** of the channel
   being browsed under the grid, failures included with their error: generation being
   asynchronous, that is where a run that produced nothing shows.
 - **Save-time syntax validation**: an override (hand edit, import) or an approved

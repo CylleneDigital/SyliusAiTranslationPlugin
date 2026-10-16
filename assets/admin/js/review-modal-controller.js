@@ -51,8 +51,11 @@ export default class extends Controller {
         this.currentOriginTarget.textContent = suggestion.suggestionCurrentOrigin;
 
         // A reserved row carries the engine's "interrupted" error while its run still waits.
+        // The target came after the template: a host's override of it may not have it.
         const inFlight = suggestion.suggestionInFlight === '1';
-        this.inFlightTarget.classList.toggle('d-none', !inFlight);
+        if (this.hasInFlightTarget) {
+            this.inFlightTarget.classList.toggle('d-none', !inFlight);
+        }
         this.show(this.errorTarget, this.errorMessageTarget, inFlight ? '' : suggestion.suggestionError);
         this.show(this.mismatchTarget, this.mismatchListTarget, suggestion.suggestionMismatch);
         this.show(this.pluralTarget, this.pluralListTarget, suggestion.suggestionPlural);

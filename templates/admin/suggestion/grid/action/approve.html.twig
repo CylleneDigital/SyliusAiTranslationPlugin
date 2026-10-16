@@ -1,8 +1,12 @@
 {# Applies the suggestion as-is: a POST per row, the screen's csrf intention. An errored
-   row has no value to apply — its button is disabled, the review modal is the way in. #}
+   row has no value to apply — its button is disabled, the review modal is the way in; a
+   row with the provider says its value is still to come. #}
 {% if data.generationError %}
+    {% set hint = (data.metadata.in_flight ?? null)
+        ? 'cyllene_digital_sylius_ai_translation.ui.suggestion_in_flight_hint'|trans
+        : 'cyllene_digital_sylius_ai_translation.ui.suggestion_value_required_hint'|trans %}
     <button type="button" class="btn btn-icon btn-success" disabled
-            data-bs-toggle="tooltip" data-bs-title="{{ 'cyllene_digital_sylius_ai_translation.ui.suggestion_value_required_hint'|trans }}">
+            data-bs-toggle="tooltip" data-bs-title="{{ hint }}">
         {{ ux_icon(action.icon|default('tabler:check')) }}
     </button>
 {% else %}

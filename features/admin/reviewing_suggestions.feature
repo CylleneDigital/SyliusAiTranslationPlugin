@@ -45,6 +45,14 @@ Feature: Reviewing the AI suggestions
         Then I should not be able to approve it
 
     @ui @javascript
+    Scenario: A suggestion still with the provider is not shown as a failure
+        Given the AI suggestion for the "product.out_of_stock" key of the "shop/Product/messages" catalogue in "fr_FR" is still with the provider
+        When I browse the AI suggestions
+        And I review the suggestion for the "product.out_of_stock" key
+        Then I should be told it is still with the provider
+        And I should not be able to approve it
+
+    @ui @javascript
     Scenario: Approving several suggestions at once
         Given the AI suggested "Rupture de stock" for the "product.out_of_stock" key of the "shop/Product/messages" catalogue in "fr_FR"
         When I browse the AI suggestions

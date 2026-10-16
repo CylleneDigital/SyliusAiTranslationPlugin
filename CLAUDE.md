@@ -200,10 +200,11 @@ file does.
   channel when a run starts and before each chunk: `ChannelRegistry` keeps the channels for a
   whole request, but one second at most outside one (a worker, the console), or a channel
   deleted during a run would not stop it.
-- **A deleted channel is purged on `sylius.channel.post_delete`**, never on `pre_delete` nor in a
-  Doctrine listener: `ChannelDeletionListener` calls the engine's `ScopePurger` once Sylius has
-  committed the deletion (overrides, suggestions, prompt context; the journal stays), and logs a
-  purge that fails instead of throwing; `cyllene:ai-translation:purge-scopes` catches what it
+- **A deleted channel is purged on `sylius.channel.post_delete`, at priority `-1024`**, never on
+  `pre_delete` nor in a Doctrine listener: `ChannelDeletionListener` calls the engine's
+  `ScopePurger` once Sylius has committed the deletion and the host's listeners have run
+  (overrides, suggestions, prompt context; the journal stays), and logs a purge that fails
+  (an `\Exception`, not an `\Error`) instead of throwing; `cyllene:ai-translation:purge-scopes` catches what it
   missed ([0025](docs/adr/0025-a-deleted-channel-takes-its-translations-along.md)).
 - The public surface - the bundle class and its namespace, the admin routes, the Twig hooks and
   templates, the roles, the menu entry and the generation bus - only breaks in a major version,

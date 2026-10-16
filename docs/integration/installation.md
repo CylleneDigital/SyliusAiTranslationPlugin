@@ -104,23 +104,28 @@ would roll back the suggestions already billed. If you dispatch `GenerateSuggest
 yourself, use that bus too
 ([decision record](../adr/0001-generation-runs-on-a-dedicated-bus.md)).
 
-Keep that transport asynchronous: a run is stopped before its next chunk when its channel is
-deleted meanwhile, which a run executed inside the admin's request, on a synchronous transport,
-does not see ([decision record](../adr/0024-double-billing-guard-is-the-engines-contract.md)).
+Keep that transport asynchronous: a run stops before its next chunk when its channel is deleted
+meanwhile, but a run executed inside a request (a synchronous transport) keeps the channels it read
+when the request started, and does not see the deletion ([decision record](../adr/0024-double-billing-guard-is-the-engines-contract.md)).
 
 ## A deleted channel
 
 Deleting a channel from the admin purges what the engine stores for it - its overrides, its
 suggestions and its prompt context - once Sylius has committed the deletion; the generation
-journal stays. A purge that fails is logged, and the deletion goes through. A channel deleted
-another way (a script, an API, SQL), or before the plugin purged deleted channels, keeps its rows until the
-engine's command purges them; without `--force`, it only lists them:
+journal stays. A purge that fails is logged, and the deletion goes through; in a bulk deletion,
+the channels after it are not deleted (Sylius says so in a flash). A channel deleted another way
+(a script, Sylius' API, SQL), or deleted before this version of the plugin, keeps its rows until
+the engine's command purges them; without `--force`, it only lists them:
 
 ```bash
 bin/console cyllene:ai-translation:purge-scopes
 bin/console cyllene:ai-translation:purge-scopes --force
 ```
 
+The purge runs inside the deletion request, one `OverrideRemovedEvent` per override: for a channel
+with tens of thousands of overrides, or a costly listener of that event (a reverse proxy purge),
+it can outlast the proxy's timeout. The admin then sees an error page while the channel is deleted,
+and the command purges what is left.
 ([decision record](../adr/0025-a-deleted-channel-takes-its-translations-along.md))
 
 ## The parsed translation files

@@ -25,16 +25,27 @@ refuses (the last enabled channel, a channel still in use) must lose nothing, no
 flush, whose rollback would follow an announced purge.
 
 A purge that fails is logged, and does not turn a deletion that happened into an error page. A
-channel deleted without Sylius' admin controller (a script, an API, SQL) is not seen either:
-the engine's command purges both later.
+channel deleted without Sylius' resource controller (a script, Sylius' API, SQL) is not purged
+at all. The engine's command purges what either case left behind.
+
+The purge runs after the host's own listeners of that event: a purge that fails leaves the entity
+manager they share closed.
 
 ## Consequences
 
 - Deleting a channel deletes its translation work, which does not come back: an export of the
   channel's view, before the deletion, is the copy to keep.
-- A channel created again under the same code starts with no override and no suggestion.
-- The journal keeps the deleted channel's runs: it records what was paid for, and no screen
-  serves it.
+- A channel created again under the same code starts with no override and no suggestion, unless
+  a run of the deleted channel failed at the provider after the purge: the engine stores that
+  failure under the deleted code, which the new channel then finds unless the engine's command
+  purged it in between.
+- The journal keeps the deleted channel's runs: it records what was paid for, and serves no
+  translation; a channel created again under the same code lists them in its journal.
+- Whoever may delete a channel in Sylius deletes its translation work, without any permission of
+  the plugin: the deletion is Sylius' decision, the purge only follows it.
+- A channel with many overrides is purged inside the deletion request, one removal announced per
+  override; in a bulk deletion, a purge that fails stops the deletion of the channels after it,
+  the entity manager being closed.
 - The prompt context goes with the purge, after the deletion, instead of being staged with it.
 - The rows a channel deleted before this decision left are only purged by the engine's command.
 

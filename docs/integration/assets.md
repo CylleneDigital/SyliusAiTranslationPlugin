@@ -39,7 +39,7 @@ no error message.
 |---|---|---|
 | `ait-admin-edit-modal` | fills the edit modal from the row that opened it | catalogue screen |
 | `ait-admin-header-help` | attaches the column helps to the grid headers | catalogue screen |
-| `ait-admin-review-modal` | fills the review modal, points its two decisions at the suggestion's routes, disables approval on an empty value | suggestions screen |
+| `ait-admin-review-modal` | fills the review modal, points its two decisions at the suggestion's routes, disables approval on an empty value, says when the row is still with the provider | suggestions screen |
 | `ait-admin-generation` | fetches the cost estimate (cleared as soon as a coordinate changes), asks for confirmation before a run on every catalogue, ignores a second submit | suggestions screen |
 | `ait-admin-scope-filter` | reloads the page on the chosen channel and carries it through Sylius' filter form | both screens |
 | `ait-admin-confirm` | asks before a form is submitted | orphan purge |

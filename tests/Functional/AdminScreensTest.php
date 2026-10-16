@@ -339,6 +339,10 @@ final class AdminScreensTest extends WebTestCase
         $badges = static fn (string $label): int => $crawler->filter('span.badge')->reduce(static fn (Crawler $badge): bool => str_contains($badge->text(), $label))->count();
         self::assertSame(1, $badges('Sent to the provider'));
         self::assertSame(1, $badges('Generation failed'));
+        // Its approve button says the value is still to come, not that there is none.
+        $hints = static fn (string $start): int => $crawler->filter('button[disabled][data-bs-title]')->reduce(static fn (Crawler $button): bool => str_starts_with((string) $button->attr('data-bs-title'), $start))->count();
+        self::assertSame(1, $hints("The provider's reply is not stored yet"));
+        self::assertSame(1, $hints('No value to apply'));
     }
 
     public function testAScalarCriteriaOrSortingIsIgnoredOnBothScreens(): void
