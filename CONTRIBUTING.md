@@ -296,7 +296,7 @@ it there, which is the moment to check that the engine's
 names it, method by method. What that page does not list is internal and may change in a minor
 version: ask the engine to list it rather than rely on it.
 
-Two CI jobs watch the two ends of the `^1.4.1` constraint:
+Two CI jobs watch the two ends of the `^1.4.2` constraint:
 
 - `Oldest supported engine` (part of `Build complete`) runs the container lint, PHPStan and
   PHPUnit on the lowest release the constraint allows. A pull request that needs a newer engine raises the constraint.

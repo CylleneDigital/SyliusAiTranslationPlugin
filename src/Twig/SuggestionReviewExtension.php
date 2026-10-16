@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace CylleneDigital\SyliusAiTranslationPlugin\Twig;
 
 use CylleneDigital\AiTranslationBundle\Entity\TranslationSuggestion;
-use CylleneDigital\AiTranslationBundle\Override\TranslationManagerInterface;
+use CylleneDigital\AiTranslationBundle\Override\OverrideReader;
 use CylleneDigital\AiTranslationBundle\Override\TranslationValueValidator;
 use CylleneDigital\AiTranslationBundle\Suggestion\PlaceholderConsistencyChecker;
 use CylleneDigital\AiTranslationBundle\Suggestion\PluralCategories;
@@ -38,7 +38,7 @@ final class SuggestionReviewExtension extends AbstractExtension implements Reset
     private array $reviews = [];
 
     public function __construct(
-        private readonly TranslationManagerInterface $translationManager,
+        private readonly OverrideReader $overrides,
         private readonly PlaceholderConsistencyChecker $placeholderChecker,
         private readonly TranslationValueValidator $valueValidator,
     ) {
@@ -58,6 +58,34 @@ final class SuggestionReviewExtension extends AbstractExtension implements Reset
         return [
             new TwigFunction('cyllene_digital_sylius_ai_translation_review', $this->review(...)),
         ];
+    }
+
+    /**
+     * Reads the entries of a whole page of suggestions at once: two queries per (locale,
+     * channel) the page holds, where the first row of each catalogue cost two of its own.
+     *
+     * @param iterable<mixed> $suggestions
+     */
+    public function prefetch(iterable $suggestions): void
+    {
+        $catalogues = [];
+
+        foreach ($suggestions as $suggestion) {
+            if ($suggestion instanceof TranslationSuggestion) {
+                $catalogues[$suggestion->getLocale()][$suggestion->getScope()][$suggestion->getCatalogue()] = true;
+            }
+        }
+
+        foreach ($catalogues as $locale => $scopes) {
+            foreach ($scopes as $scope => $names) {
+                $locale = (string) $locale;
+                $scope = (string) $scope;
+
+                foreach ($this->overrides->getTranslationsForCatalogues(array_map('strval', array_keys($names)), $locale, $scope) as $catalogue => $entries) {
+                    $this->entries[$catalogue . '|' . $locale . '|' . $scope] ??= $entries;
+                }
+            }
+        }
     }
 
     /**
@@ -112,15 +140,15 @@ final class SuggestionReviewExtension extends AbstractExtension implements Reset
     }
 
     /**
-     * The suggestion's entry as the catalogue browser reads it — one read per (catalogue,
-     * locale, channel) for the whole page, not per row.
+     * The suggestion's entry as the catalogue browser reads it: from the page's prefetch
+     * ({@see prefetch()}), else one read per (catalogue, locale, channel), not per row.
      *
      * @return array{original: ?string, override: ?string, hasOverride: bool, inherited: ?string, inheritedFrom: array{locale: string, scope: string}|null}
      */
     private function entry(TranslationSuggestion $suggestion): array
     {
         $slice = $suggestion->getCatalogue() . '|' . $suggestion->getLocale() . '|' . $suggestion->getScope();
-        $this->entries[$slice] ??= $this->translationManager->getTranslationsForCatalogue($suggestion->getCatalogue(), $suggestion->getLocale(), $suggestion->getScope());
+        $this->entries[$slice] ??= $this->overrides->getTranslationsForCatalogues([$suggestion->getCatalogue()], $suggestion->getLocale(), $suggestion->getScope())[$suggestion->getCatalogue()];
 
         return $this->entries[$slice][$suggestion->getKey()]
             ?? ['original' => null, 'override' => null, 'hasOverride' => false, 'inherited' => null, 'inheritedFrom' => null];

@@ -16,7 +16,7 @@ This file only holds what reading the code will not tell you.
 The plugin targets Sylius 2.1, 2.2 and 2.3, Symfony 7.4 and 8 (8 with Sylius 2.3 only), PHP 8.3+.
 It is the Sylius back office of
 [`cyllene-digital/ai-translation-bundle`](https://github.com/CylleneDigital/AiTranslationBundle)
-(`^1.4.1`, from Packagist): the engine, its entities and its `cyllene_digital_ai_translation`
+(`^1.4.2`, from Packagist): the engine, its entities and its `cyllene_digital_ai_translation`
 configuration tree live there, not here.
 
 ## Where things live
@@ -105,7 +105,10 @@ the schema from the mapping (`database_setup: schema`), the MySQL and MariaDB jo
   browsed locale from one grouped read for the whole view
   (`OverrideReader::getTranslationsForCatalogues()`), plus one read per reference locale;
   `tests/Integration/View/TranslationViewFactoryTest.php` checks that the number of catalogues
-  does not change the count. The lever is in the engine, not in a plugin-side cache of its rows
+  does not change the count. The suggestions screen reads the entries of its page the same way,
+  once per locale and channel of the page (`SuggestionReviewExtension::prefetch()`, called by its
+  controller); `tests/Integration/Twig/SuggestionReviewExtensionTest.php` counts it. The lever is
+  in the engine, not in a plugin-side cache of its rows
   ([0014](docs/adr/0014-no-plugin-side-cache-of-catalogue-rows.md)).
 - Front build (required by the functional tests: admin pages render the Webpack Encore
   entrypoints): in `vendor/sylius/test-application`, `yarn install && yarn build`. The test

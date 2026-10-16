@@ -49,7 +49,8 @@ No test builds an engine service by hand: its constructors are not part of its c
 that needs the real engine takes it from the container. What a view costs is therefore counted
 on the real engine too: `tests/Integration/View/TranslationViewFactoryTest.php` reads the queries
 Doctrine's debug middleware collected, and checks that the number of catalogues of a view does
-not change it.
+not change it; `tests/Integration/Twig/SuggestionReviewExtensionTest.php` does the same for a page
+of the suggestions screen, read for each locale and channel it holds.
 
 ## Behat
 
