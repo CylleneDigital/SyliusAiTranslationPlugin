@@ -113,20 +113,25 @@ final class ChannelDeletionListenerTest extends KernelTestCase
         /** @var \Symfony\Component\EventDispatcher\EventDispatcherInterface $dispatcher */
         $dispatcher = self::getContainer()->get('event_dispatcher');
         $plugin = self::getContainer()->get('cyllene_digital_sylius_ai_translation.scope.channel_deletion_listener');
-        $priorities = ['plugin' => [], 'other' => []];
+        // A host listener registered at a low priority of its own still runs before the purge.
+        $probe = static function (): void {};
+        $dispatcher->addListener('sylius.channel.post_delete', $probe, -1000);
 
+        $order = [];
         foreach ($dispatcher->getListeners('sylius.channel.post_delete') as $listener) {
-            $isPlugin = $listener === $plugin || (\is_array($listener) && $listener[0] === $plugin);
-            $priorities[$isPlugin ? 'plugin' : 'other'][] = $dispatcher->getListenerPriority('sylius.channel.post_delete', $listener);
+            $order[] = match (true) {
+                $listener === $plugin, \is_array($listener) && $listener[0] === $plugin => 'plugin',
+                $listener === $probe => 'probe',
+                default => 'sylius',
+            };
         }
+        $dispatcher->removeListener('sylius.channel.post_delete', $probe);
 
         // Sylius' own listener of that event flushes: a purge that fails must not close the
         // entity manager before it.
-        self::assertSame([-1024], $priorities['plugin']);
-        self::assertNotSame([], $priorities['other']);
-        foreach ($priorities['other'] as $priority) {
-            self::assertGreaterThan(-1024, $priority);
-        }
+        self::assertSame('plugin', $order[array_key_last($order)] ?? null);
+        self::assertContains('sylius', $order);
+        self::assertContains('probe', $order);
     }
 
     public function testAPurgeThatFailsIsLoggedAndLeavesTheDeletionAlone(): void
