@@ -151,7 +151,7 @@ jobs:
             -
                 name: Setup Node before Sylius 2.2
                 if: matrix.sylius == '~2.1.0'
-                uses: actions/setup-node@v4
+                uses: actions/setup-node@v7
                 with:
                     node-version: "22.x"
 
