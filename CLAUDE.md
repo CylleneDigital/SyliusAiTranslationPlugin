@@ -114,6 +114,10 @@ the schema from the mapping (`database_setup: schema`), the MySQL and MariaDB jo
   entrypoints): in `vendor/sylius/test-application`, `yarn install && yarn build`. The test
   application bundles `assets/admin/entrypoint.js` as `plugin-admin-entry`: rebuild after any
   change under `assets/`, nothing reloads it.
+- **`tests/TestApplication/package.json` raises `@symfony/stimulus-bridge` to `^4.0.2`**: the test
+  application's `preinstall` merges it into its own `package.json`. The 3.x loader requires
+  `webpack/lib/dependencies/LoaderDependency`, gone since webpack 5.112, and the Sylius 2.1 front
+  build fails on it (`yarn install` runs without a lockfile).
 - Sylius needs `ext-sodium`: a PHP without it cannot run `composer install` as is. The image of
   `compose.yml` has it.
 - In a Symfony 7.4 resolution, pin the stack (`extra.symfony.require`): Composer otherwise mixes
