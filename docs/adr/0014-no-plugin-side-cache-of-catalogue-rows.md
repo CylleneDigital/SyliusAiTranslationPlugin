@@ -2,12 +2,15 @@
 
 - Status: accepted
 - Date: 2026-10-13
+- Amended: 2026-10-22, the context describes the engine as it was then
 
 ## Context
 
-The catalogue screen costs what the engine costs: for each page, every translation file of the
-view is parsed again (the engine caches them per process, not across requests) and each catalogue
-is read with queries of its own.
+The catalogue screen costs what the engine costs. When this was decided, every translation file
+of the view was parsed again for each page (the engine cached them per process, not across
+requests) and each catalogue was read with queries of its own. The engine has since moved both
+levers named below: it keeps the parsed files in a cache pool across requests, and reads the
+overrides of a whole view at once.
 
 ## Decision
 
