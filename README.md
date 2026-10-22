@@ -32,7 +32,7 @@ per-channel context for the AI, under human review, always.
 | PHP | `^8.3` (Symfony 8: `^8.4`) |
 | Sylius | `2.1`, `2.2`, `2.3` |
 | Symfony | `^7.4`, or `^8.0` with Sylius 2.3 |
-| [`cyllene-digital/ai-translation-bundle`](https://packagist.org/packages/cyllene-digital/ai-translation-bundle) | `^1.4.2` |
+| [`cyllene-digital/ai-translation-bundle`](https://packagist.org/packages/cyllene-digital/ai-translation-bundle) | `^2.0` |
 
 In a Symfony 7.4 project, pin the stack with `extra.symfony.require: "7.4.*"` (standard Flex
 practice): without it Composer may mix Symfony 8 components (`symfony/var-exporter`…) into a

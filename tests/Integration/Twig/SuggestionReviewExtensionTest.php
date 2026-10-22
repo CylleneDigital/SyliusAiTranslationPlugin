@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Tests\CylleneDigital\SyliusAiTranslationPlugin\Integration\Twig;
 
 use CylleneDigital\AiTranslationBundle\Entity\TranslationSuggestion;
-use CylleneDigital\AiTranslationBundle\Override\OverrideReader;
 use CylleneDigital\AiTranslationBundle\Override\TranslationManagerInterface;
 use CylleneDigital\AiTranslationBundle\Override\TranslationValueValidator;
 use CylleneDigital\AiTranslationBundle\Suggestion\PlaceholderConsistencyChecker;
@@ -118,14 +117,14 @@ final class SuggestionReviewExtensionTest extends KernelTestCase
     {
         $container = self::getContainer();
 
-        /** @var OverrideReader $overrides */
-        $overrides = $container->get(OverrideReader::class);
+        /** @var TranslationManagerInterface $translationManager */
+        $translationManager = $container->get(TranslationManagerInterface::class);
         /** @var PlaceholderConsistencyChecker $placeholders */
         $placeholders = $container->get(PlaceholderConsistencyChecker::class);
         /** @var TranslationValueValidator $validator */
         $validator = $container->get(TranslationValueValidator::class);
 
-        return new SuggestionReviewExtension($overrides, $placeholders, $validator);
+        return new SuggestionReviewExtension($translationManager, $placeholders, $validator);
     }
 
     /** @param callable(): mixed $read */

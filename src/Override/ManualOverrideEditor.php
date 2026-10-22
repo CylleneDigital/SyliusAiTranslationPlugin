@@ -6,7 +6,6 @@ namespace CylleneDigital\SyliusAiTranslationPlugin\Override;
 
 use CylleneDigital\AiTranslationBundle\Override\InvalidOverrideException;
 use CylleneDigital\AiTranslationBundle\Override\OverrideChange;
-use CylleneDigital\AiTranslationBundle\Override\OverrideReader;
 use CylleneDigital\AiTranslationBundle\Override\TranslationManagerInterface;
 use CylleneDigital\AiTranslationBundle\Override\TranslationValueValidator;
 use CylleneDigital\AiTranslationBundle\Repository\TranslationSuggestionRepository;
@@ -25,7 +24,6 @@ final readonly class ManualOverrideEditor
 {
     public function __construct(
         private TranslationManagerInterface $translationManager,
-        private OverrideReader $overrides,
         private TranslationSuggestionRepository $suggestionRepository,
         private TranslationValueValidator $valueValidator,
         private PlaceholderConsistencyChecker $placeholderChecker,
@@ -44,7 +42,7 @@ final readonly class ManualOverrideEditor
         $fileValue = $this->translationManager->getOriginalValue($key, $catalogue, $locale);
         // Where the baseline comes from, not what it reads: an inherited override that says
         // what the file says is still the one the entry follows once its own one is gone.
-        $inherited = $this->overrides->getInheritedValue($key, $catalogue, $locale, $scope);
+        $inherited = $this->translationManager->getInheritedValue($key, $catalogue, $locale, $scope);
         $baseline = $inherited ?? $fileValue;
         $stored = $this->translationManager->getOverrideValue($key, $catalogue, $locale, $scope);
 

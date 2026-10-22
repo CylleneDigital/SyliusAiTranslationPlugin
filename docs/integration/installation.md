@@ -12,7 +12,7 @@ Composer installs both, and the engine is configured under its own
 | PHP | `^8.3` (Symfony 8: `^8.4`), with `ext-intl` |
 | Sylius | `2.1`, `2.2`, `2.3` |
 | Symfony | `^7.4`, or `^8.0` with Sylius 2.3 |
-| Engine | `^1.4.2` |
+| Engine | `^2.0` |
 
 A Messenger worker is needed for AI generation, and a Webpack Encore build for the admin assets,
 as for the rest of a Sylius application.
