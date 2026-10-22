@@ -41,7 +41,7 @@ final readonly class ManualOverrideEditor
         $value = str_replace("\r\n", "\n", $value);
         $value = '' === trim($value) ? '' : $value;
 
-        $fileValue = $this->overrides->getFileValue($key, $catalogue, $locale);
+        $fileValue = $this->translationManager->getOriginalValue($key, $catalogue, $locale);
         // Where the baseline comes from, not what it reads: an inherited override that says
         // what the file says is still the one the entry follows once its own one is gone.
         $inherited = $this->overrides->getInheritedValue($key, $catalogue, $locale, $scope);
