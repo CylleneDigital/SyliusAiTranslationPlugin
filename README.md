@@ -19,7 +19,7 @@ per-channel context for the AI, under human review, always.
       <br><sub><b>Translation management</b>: channel selector, coverage per locale, catalogue browsing, overrides of the channel or inherited from the global ones</sub>
     </td>
     <td width="50%" align="center" valign="top">
-      <a href="docs/assets/admin-suggestions.png"><img src="docs/assets/admin-suggestions.png" alt="AI suggestions screen: generation form with its volume estimate, pending suggestions to approve, edit or reject - a failed generation among them - and the journal of the last runs" width="100%"></a>
+      <a href="docs/assets/admin-suggestions.png"><img src="docs/assets/admin-suggestions.png" alt="AI suggestions screen: generation form with its volume estimate, pending suggestions to approve, edit or reject - a failed generation and one still with the provider among them - and the journal of the last runs" width="100%"></a>
       <br><sub><b>AI suggestions</b>: generation with a volume estimate, human review of the pending suggestions, journal of the last runs</sub>
     </td>
   </tr>

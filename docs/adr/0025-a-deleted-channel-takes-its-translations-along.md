@@ -2,6 +2,7 @@
 
 - Status: accepted
 - Date: 2026-10-16
+- Amended: 2026-10-22, the engine no longer stores a failed run under a deleted channel
 - Supersedes: [0023](0023-deleted-channel-keeps-its-translations.md)
 
 ## Context
@@ -35,10 +36,9 @@ leaves the entity manager they share closed.
 
 - Deleting a channel deletes its translation work, which does not come back: an export of the
   channel's view, before the deletion, is the copy to keep.
-- A channel created again under the same code starts with no override and no suggestion, unless
-  a run of the deleted channel failed at the provider after the purge: the engine stores that
-  failure under the deleted code, which the new channel then finds unless the engine's command
-  purged it in between.
+- A channel created again under the same code starts with no override and no suggestion, even
+  when a run of the deleted channel failed at the provider after the purge: the engine stores no
+  failure under a channel that no longer exists.
 - The journal keeps the deleted channel's runs: it records what was paid for, and serves no
   translation; a channel created again under the same code lists them in its journal.
 - Whoever may delete a channel in Sylius deletes its translation work, without any permission of

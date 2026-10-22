@@ -39,7 +39,7 @@ final class AiTranslationFixture extends AbstractFixture
      * @param array{
      *     contexts: array<string, string>,
      *     overrides: list<array{key: string, catalogue: string, locale: string, value: string, channel: string}>,
-     *     suggestions: list<array{key: string, catalogue: string, locale: string, value: ?string, channel: string, confidence: float, error: ?string}>,
+     *     suggestions: list<array{key: string, catalogue: string, locale: string, value: ?string, channel: string, confidence: float, error: ?string, in_flight: bool}>,
      *     runs: list<array{catalogue: string, locale: string, channel: string, created: int, error: ?string}>,
      * } $options
      */
@@ -63,6 +63,15 @@ final class AiTranslationFixture extends AbstractFixture
         foreach ($options['suggestions'] as $suggestion) {
             $source = $this->translationManager->getOriginalValue($suggestion['key'], $suggestion['catalogue'], self::SOURCE_LOCALE) ?? $suggestion['key'];
             $scope = $this->scope($suggestion['channel']);
+
+            if ($suggestion['in_flight']) {
+                // What the engine stores before calling the provider: an errored row, marked in flight.
+                $reserved = TranslationSuggestion::failed($suggestion['key'], $suggestion['catalogue'], $suggestion['locale'], $source, self::SOURCE_LOCALE, self::PROVIDER, 'Interrupted before the reply was stored', $scope);
+                $reserved->setMetadata(['in_flight' => (new \DateTimeImmutable())->format('Y-m-d\TH:i:s.uP')]);
+                $this->entityManager->persist($reserved);
+
+                continue;
+            }
 
             $this->entityManager->persist(null !== $suggestion['error']
                 ? TranslationSuggestion::failed($suggestion['key'], $suggestion['catalogue'], $suggestion['locale'], $source, self::SOURCE_LOCALE, self::PROVIDER, $suggestion['error'], $scope)
@@ -110,6 +119,7 @@ final class AiTranslationFixture extends AbstractFixture
                             ->scalarNode('channel')->defaultValue('')->end()
                             ->floatNode('confidence')->defaultValue(0.9)->end()
                             ->scalarNode('error')->defaultNull()->info('A failed generation: no value, the provider error instead')->end()
+                            ->booleanNode('in_flight')->defaultFalse()->info('Sent to the provider by a run that has not stored the reply yet')->end()
                         ->end()
                     ->end()
                 ->end()

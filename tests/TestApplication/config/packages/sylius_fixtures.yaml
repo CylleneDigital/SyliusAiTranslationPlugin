@@ -63,6 +63,8 @@ sylius_fixtures:
                             - { key: product.out_of_stock, catalogue: shop/Product/messages, locale: fr_FR, value: 'En rupture de stock', confidence: 0.95 }
                             - { key: dashboard.saved, catalogue: admin/Dashboard/flashes, locale: fr_FR, value: 'Tableau de bord enregistré', confidence: 0.72 }
                             - { key: checkout.pay, catalogue: shop/Checkout/messages, locale: fr_FR, error: 'The provider answered 429 (rate limit)' }
+                            # Sent to the provider by a run still waiting for its reply.
+                            - { key: product.add_to_cart, catalogue: shop/Product/messages, locale: fr_FR, in_flight: true }
                             # Pending for one channel: German only exists on FASHION_WEB.
                             - { key: app.welcome, locale: de_DE, value: 'Willkommen im Shop', channel: FASHION_WEB, confidence: 0.93 }
                             - { key: app.dashboard, locale: de_DE, value: 'Übersicht', channel: FASHION_WEB, confidence: 0.61 }

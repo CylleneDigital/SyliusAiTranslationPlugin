@@ -1,7 +1,9 @@
 # Architecture decision records
 
 One file per decision: its context, what was decided, what follows from it. A decision is not
-edited once accepted: a new record supersedes it, and the old one says so in its status.
+edited once accepted: a new record supersedes it, and the old one says so in its status. A fact
+of its context or consequences that changed since, the decision holding, is corrected in place,
+with an `Amended` line under the date saying what changed.
 
 A record holds the decision and its reasons, which do not move with the code. It names what the
 decision is about (a bus, a priority, a status code), nothing else of the code. What moves with
