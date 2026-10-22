@@ -92,7 +92,7 @@ of them about internals: a record promises nothing, only this page says what is 
 | Symfony | 7.4 and 8.x (8.x with PHP 8.4+ and Sylius 2.3 in CI) |
 | PHP | 8.3+ (CI: 8.3, 8.4, 8.5) |
 | Databases (CI) | MySQL 8.0 and 8.4, MariaDB 10.11 and 11.4, PostgreSQL 15, 16 and 17 |
-| Engine | `cyllene-digital/ai-translation-bundle` `^1.4.2` (CI: the newest and the oldest release) |
+| Engine | `cyllene-digital/ai-translation-bundle` `^2.0` (CI: the newest and the oldest release) |
 
 Support for a Sylius, Symfony or PHP version ends when it leaves the CI matrix. Report security
 flaws privately: [`SECURITY.md`](../../SECURITY.md).

@@ -6,7 +6,6 @@ namespace CylleneDigital\SyliusAiTranslationPlugin\View;
 
 use CylleneDigital\AiTranslationBundle\Catalogue\TranslationCatalogue;
 use CylleneDigital\AiTranslationBundle\Entity\TranslationOverride;
-use CylleneDigital\AiTranslationBundle\Override\OverrideReader;
 use CylleneDigital\AiTranslationBundle\Override\TranslationManagerInterface;
 
 /**
@@ -25,7 +24,6 @@ final readonly class TranslationViewFactory
 {
     public function __construct(
         private TranslationManagerInterface $translationManager,
-        private OverrideReader $overrides,
     ) {
     }
 
@@ -83,7 +81,7 @@ final readonly class TranslationViewFactory
         }
 
         // The browsed locale's entries, in two queries whatever the number of catalogues.
-        $targets = $this->overrides->getTranslationsForCatalogues(
+        $targets = $this->translationManager->getTranslationsForCatalogues(
             array_map(static fn (TranslationCatalogue $catalogue): string => $catalogue->identifier, $catalogues),
             $locale,
             $scope,

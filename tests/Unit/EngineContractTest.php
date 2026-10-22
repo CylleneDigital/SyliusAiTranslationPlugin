@@ -32,7 +32,6 @@ final class EngineContractTest extends TestCase
         // Services.
         'Coverage\\CoverageCalculator',
         'Estimation\\GenerationCostEstimator',
-        'Override\\OverrideReader',
         'Override\\TranslationValueValidator',
         'Provider\\TranslationProviderRegistry',
         'Repository\\TranslationSuggestionRepository',

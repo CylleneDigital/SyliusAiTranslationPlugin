@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace CylleneDigital\SyliusAiTranslationPlugin\Twig;
 
 use CylleneDigital\AiTranslationBundle\Entity\TranslationSuggestion;
-use CylleneDigital\AiTranslationBundle\Override\OverrideReader;
+use CylleneDigital\AiTranslationBundle\Override\TranslationManagerInterface;
 use CylleneDigital\AiTranslationBundle\Override\TranslationValueValidator;
 use CylleneDigital\AiTranslationBundle\Suggestion\PlaceholderConsistencyChecker;
 use CylleneDigital\AiTranslationBundle\Suggestion\PluralCategories;
@@ -38,7 +38,7 @@ final class SuggestionReviewExtension extends AbstractExtension implements Reset
     private array $reviews = [];
 
     public function __construct(
-        private readonly OverrideReader $overrides,
+        private readonly TranslationManagerInterface $translationManager,
         private readonly PlaceholderConsistencyChecker $placeholderChecker,
         private readonly TranslationValueValidator $valueValidator,
     ) {
@@ -81,7 +81,7 @@ final class SuggestionReviewExtension extends AbstractExtension implements Reset
                 $locale = (string) $locale;
                 $scope = (string) $scope;
 
-                foreach ($this->overrides->getTranslationsForCatalogues(array_map('strval', array_keys($names)), $locale, $scope) as $catalogue => $entries) {
+                foreach ($this->translationManager->getTranslationsForCatalogues(array_map('strval', array_keys($names)), $locale, $scope) as $catalogue => $entries) {
                     $this->entries[$catalogue . '|' . $locale . '|' . $scope] ??= $entries;
                 }
             }
@@ -148,7 +148,7 @@ final class SuggestionReviewExtension extends AbstractExtension implements Reset
     private function entry(TranslationSuggestion $suggestion): array
     {
         $slice = $suggestion->getCatalogue() . '|' . $suggestion->getLocale() . '|' . $suggestion->getScope();
-        $this->entries[$slice] ??= $this->overrides->getTranslationsForCatalogues([$suggestion->getCatalogue()], $suggestion->getLocale(), $suggestion->getScope())[$suggestion->getCatalogue()];
+        $this->entries[$slice] ??= $this->translationManager->getTranslationsForCatalogues([$suggestion->getCatalogue()], $suggestion->getLocale(), $suggestion->getScope())[$suggestion->getCatalogue()];
 
         return $this->entries[$slice][$suggestion->getKey()]
             ?? ['original' => null, 'override' => null, 'hasOverride' => false, 'inherited' => null, 'inheritedFrom' => null];

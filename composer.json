@@ -32,7 +32,7 @@
     "require": {
         "php": "^8.3",
         "ext-intl": "*",
-        "cyllene-digital/ai-translation-bundle": "^1.4.2",
+        "cyllene-digital/ai-translation-bundle": "^2.0",
         "doctrine/persistence": "^3.1 || ^4.0",
         "pagerfanta/core": "^3.7 || ^4.0",
         "psr/cache": "^3.0",
