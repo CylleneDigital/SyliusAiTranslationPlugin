@@ -626,11 +626,8 @@ final class AdminActionsTest extends WebTestCase
         self::assertResponseRedirects();
         $this->client->followRedirect();
         self::assertStringContainsString('2 suggestions approved', (string) $this->client->getResponse()->getContent());
-
-        /** @var TranslationSuggestionRepository $suggestions */
-        $suggestions = self::getContainer()->get(TranslationSuggestionRepository::class);
-        self::assertTrue($suggestions->find($first->getId())?->isApproved());
-        self::assertTrue($suggestions->find($second->getId())?->isApproved());
+        self::assertTrue($this->suggestionRepository()->find($first->getId())?->isApproved());
+        self::assertTrue($this->suggestionRepository()->find($second->getId())?->isApproved());
         self::assertSame('Bienvenue A', $this->overrideRepository()->findOneByKey('app.welcome', 'messages', 'fr_FR')?->getValue());
         self::assertSame('Tableau B', $this->overrideRepository()->findOneByKey('app.dashboard', 'messages', 'fr_FR')?->getValue());
 
@@ -648,15 +645,13 @@ final class AdminActionsTest extends WebTestCase
         $this->client->followRedirect();
         self::assertStringContainsString('1 suggestion rejected and deleted', (string) $this->client->getResponse()->getContent());
 
-        self::assertNull($suggestions->find($third->getId()));
+        self::assertNull($this->suggestionRepository()->find($third->getId()));
     }
 
     public function testTheBulkActionsStayPinnedToThePostedScope(): void
     {
-        $container = self::getContainer();
-
         /** @var EntityManagerInterface $entityManager */
-        $entityManager = $container->get(EntityManagerInterface::class);
+        $entityManager = self::getContainer()->get(EntityManagerInterface::class);
 
         // A real channel: the batch only acts for a scope that resolves to one.
         $this->createTestChannel($entityManager);
@@ -666,9 +661,6 @@ final class AdminActionsTest extends WebTestCase
         $entityManager->persist($globalRow);
         $entityManager->persist($channelRow);
         $entityManager->flush();
-
-        /** @var TranslationSuggestionRepository $suggestions */
-        $suggestions = $container->get(TranslationSuggestionRepository::class);
 
         // The channel view's bulk form carries the channel's scope in its hidden input.
         $crawler = $this->client->request('GET', '/admin/translations/suggestions', ['scope' => self::BULK_TEST_CHANNEL]);
@@ -685,7 +677,7 @@ final class AdminActionsTest extends WebTestCase
             'ids' => [$globalRow->getId()],
         ]);
         self::assertResponseRedirects();
-        self::assertTrue($suggestions->find($globalRow->getId())?->isPending());
+        self::assertTrue($this->suggestionRepository()->find($globalRow->getId())?->isPending());
         self::assertNull($this->overrideRepository()->findOneByKey('app.welcome', 'messages', 'fr_FR'));
 
         // Pinned to the global view, the batch cannot touch the channel's rows.
@@ -699,7 +691,7 @@ final class AdminActionsTest extends WebTestCase
             'ids' => [$channelRow->getId()],
         ]);
         self::assertResponseRedirects();
-        self::assertTrue($suggestions->find($channelRow->getId())?->isPending());
+        self::assertTrue($this->suggestionRepository()->find($channelRow->getId())?->isPending());
 
         // An unknown channel code pins the batch to nothing.
         $this->client->request('POST', '/admin/translations/suggestions/approve-bulk', [
@@ -708,8 +700,8 @@ final class AdminActionsTest extends WebTestCase
             'ids' => [$globalRow->getId(), $channelRow->getId()],
         ]);
         self::assertResponseRedirects();
-        self::assertTrue($suggestions->find($globalRow->getId())?->isPending());
-        self::assertTrue($suggestions->find($channelRow->getId())?->isPending());
+        self::assertTrue($this->suggestionRepository()->find($globalRow->getId())?->isPending());
+        self::assertTrue($this->suggestionRepository()->find($channelRow->getId())?->isPending());
 
         // Same scope as the rows: the batch acts (the legitimate path through a channel).
         $this->client->request('POST', '/admin/translations/suggestions/approve-bulk', [
@@ -720,7 +712,7 @@ final class AdminActionsTest extends WebTestCase
         self::assertResponseRedirects();
         $this->client->followRedirect();
         self::assertStringContainsString('1 suggestion approved', (string) $this->client->getResponse()->getContent());
-        self::assertTrue($suggestions->find($channelRow->getId())?->isApproved());
+        self::assertTrue($this->suggestionRepository()->find($channelRow->getId())?->isApproved());
         self::assertSame('Tableau H', $this->overrideRepository()->findOneByKey('app.dashboard', 'messages', 'fr_FR', self::BULK_TEST_CHANNEL)?->getValue());
     }
 
@@ -1000,6 +992,15 @@ final class AdminActionsTest extends WebTestCase
         $crawler = $this->client->request('GET', '/admin/translations/suggestions');
 
         return (string) $crawler->filter('#suggestion-review-form input[name=_token]')->attr('value');
+    }
+
+    /** Read from the container of the last request: the test's own entity manager would return the rows it still holds. */
+    private function suggestionRepository(): TranslationSuggestionRepository
+    {
+        /** @var TranslationSuggestionRepository $repository */
+        $repository = self::getContainer()->get(TranslationSuggestionRepository::class);
+
+        return $repository;
     }
 
     private function overrideRepository(): TranslationOverrideRepository
